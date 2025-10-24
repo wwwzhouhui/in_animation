@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冒泡排序算法可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 1920px;
+            height: 1080px;
+            max-width: 95%;
+            max-height: 90vh;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 42px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 22px;
+            color: #7f8c8d;
+            font-weight: 400;
+        }
+        
+        .content-area {
+            display: flex;
+            flex: 1;
+            gap: 40px;
+        }
+        
+        .animation-area {
+            flex: 2;
+            background: rgba(240, 245, 249, 0.7);
+            border-radius: 18px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        
+        .array-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 450px;
+            margin-top: 40px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .array-bar {
+            width: 60px;
+            margin: 0 8px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.4s ease;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .bar-value {
+            position: absolute;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-weight: 600;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        
+        .info-area {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .algorithm-info {
+            flex: 1;
+            margin-bottom: 20px;
+            overflow-y: auto;
+        }
+        
+        .info-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            font-weight: 600;
+        }
+        
+        .step-info {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #34495e;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(236, 240, 241, 0.7);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+        
+        .comparison-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 22px;
+            font-weight: 600;
+            color: #e74c3c;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .current-step {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+        
+        .language-toggle {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 8px 15px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            color: #3498db;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .language-toggle:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="language-toggle" id="languageToggle">EN/中</div>
+        
+        <header>
+            <h1>冒泡排序算法 Bubble Sort Algorithm</h1>
+            <div class="subtitle">可视化演示与讲解 Visual Demonstration & Explanation</div>
+        </header>
+        
+        <div class="content-area">
+            <div class="animation-area">
+                <div class="comparison-indicator" id="comparisonIndicator"></div>
+                <div class="array-container" id="arrayContainer"></div>
+                <div class="current-step" id="currentStep">准备开始...</div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #3498db;"></div>
+                        <span>未比较元素 / Unsorted</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #e74c3c;"></div>
+                        <span>正在比较 / Comparing</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #2ecc71;"></div>
+                        <span>已排序 / Sorted</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-area">
+                <div class="algorithm-info" id="algorithmInfo">
+                    <div class="info-title">算法讲解 Algorithm Explanation</div>
+                    <div class="step-info" id="step1">
+                        <strong>步骤 1 / Step 1:</strong> 冒泡排序是一种简单的排序算法，它重复地遍历要排序的列表，比较相邻的元素，如果它们的顺序错误就交换它们。
+                        <br><br>
+                        <em>Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.</em>
+                    </div>
+                    <div class="step-info" id="step2">
+                        <strong>步骤 2 / Step 2:</strong> 遍历列表的工作会重复进行，直到列表完全排序。每次遍历都会将最大的元素"冒泡"到其正确位置。
+                        <br><br>
+                        <em>The pass through the list is repeated until the list is sorted. Each pass bubbles the largest element to its correct position.</em>
+                    </div>
+                    <div class="step-info" id="step3">
+                        <strong>步骤 3 / Step 3:</strong> 该算法之所以称为"冒泡排序"，是因为较小的元素会像气泡一样逐渐"浮"到列表的顶端。
+                        <br><br>
+                        <em>The algorithm gets its name because smaller elements "bubble" to the top of the list gradually.</em>
+                    </div>
+                    <div class="step-info" id="step4">
+                        <strong>步骤 4 / Step 4:</strong> 冒泡排序的时间复杂度在最坏和平均情况下为O(n²)，在最好情况下为O(n)。
+                        <br><br>
+                        <em>Bubble Sort has a time complexity of O(n²) in worst and average cases, and O(n) in the best case.</em>
+                    </div>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="comparisons">0</div>
+                        <div class="stat-label">比较次数 / Comparisons</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="swaps">0</div>
+                        <div class="stat-label">交换次数 / Swaps</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="passes">0</div>
+                        <div class="stat-label">遍历轮数 / Passes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化数组
+        const initialArray = [64, 34, 25, 12, 22, 11, 90, 5, 77, 50];
+        let array = [...initialArray];
+        let comparisons = 0;
+        let swaps = 0;
+        let passes = 0;
+        let isEnglish = false;
+        let animationSpeed = 1000;
+        
+        // DOM元素
+        const arrayContainer = document.getElementById('arrayContainer');
+        const comparisonIndicator = document.getElementById('comparisonIndicator');
+        const currentStep = document.getElementById('currentStep');
+        const comparisonsElement = document.getElementById('comparisons');
+        const swapsElement = document.getElementById('swaps');
+        const passesElement = document.getElementById('passes');
+        const languageToggle = document.getElementById('languageToggle');
+        
+        // 初始化渲染数组
+        function renderArray() {
+            arrayContainer.innerHTML = '';
+            const maxValue = Math.max(...array);
+            
+            array.forEach((value, index) => {
+                const barHeight = (value / maxValue) * 400;
+                const bar = document.createElement('div');
+                bar.className = 'array-bar';
+                bar.style.height = `${barHeight}px`;
+                bar.style.backgroundColor = '#3498db';
+                bar.id = `bar-${index}`;
+                
+                const valueLabel = document.createElement('div');
+                valueLabel.className = 'bar-value';
+                valueLabel.textContent = value;
+                
+                bar.appendChild(valueLabel);
+                arrayContainer.appendChild(bar);
+            });
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            comparisonsElement.textContent = comparisons;
+            swapsElement.textContent = swaps;
+            passesElement.textContent = passes;
+        }
+        
+        // 高亮比较的元素
+        function highlightComparison(index1, index2) {
+            const bar1 = document.getElementById(`bar-${index1}`);
+            const bar2 = document.getElementById(`bar-${index2}`);
+            
+            if (bar1 && bar2) {
+                bar1.style.backgroundColor = '#e74c3c';
+                bar2.style.backgroundColor = '#e74c3c';
+                
+                // 添加脉冲动画
+                bar1.classList.add('pulse');
+                bar2.classList.add('pulse');
+                
+                // 显示比较指示器
+                comparisonIndicator.textContent = isEnglish ? 
+                    `Comparing: ${array[index1]} and ${array[index2]}` : 
+                    `比较中: ${array[index1]} 和 ${array[index2]}`;
+                comparisonIndicator.style.opacity = '1';
+                
+                // 更新当前步骤
+                currentStep.textContent = isEnglish ? 
+                    `Comparing elements at positions ${index1} and ${index1+1}` : 
+                    `正在比较位置 ${index1} 和 ${index1+1} 的元素`;
+            }
+        }
+        
+        // 移除高亮
+        function removeHighlight(index1, index2) {
+            const bar1 = document.getElementById(`bar-${index1}`);
+            const bar2 = document.getElementById(`bar-${index2}`);
+            
+            if (bar1 && bar2) {
+                bar1.style.backgroundColor = '#3498db';
+                bar2.style.backgroundColor = '#3498db';
+                
+                // 移除脉冲动画
+                bar1.classList.remove('pulse');
+                bar2.classList.remove('pulse');
+                
+                // 隐藏比较指示器
+                comparisonIndicator.style.opacity = '0';
+            }
+        }
+        
+        // 标记已排序的元素
+        function markAsSorted(index) {
+            const bar = document.getElementById(`bar-${index}`);
+            if (bar) {
+                bar.style.backgroundColor = '#2ecc71';
+            }
+        }
+        
+        // 交换元素
+        function swapElements(index1, index2) {
+            const temp = array[index1];
+            array[index1] = array[index2];
+            array[index2] = temp;
+            
+            // 更新可视化
+            renderArray();
+            
+            // 标记已排序的元素
+            for (let i = array.length - passes; i < array.length; i++) {
+                markAsSorted(i);
+            }
+            
+            // 更新当前步骤
+            currentStep.textContent = isEnglish ? 
+                `Swapped ${array[index2]} and ${array[index1]}` : 
+                `已交换 ${array[index2]} 和 ${array[index1]}`;
+        }
+        
+        // 冒泡排序算法
+        async function bubbleSort() {
+            const n = array.length;
+            let sorted = false;
+            
+            // 更新当前步骤
+            currentStep.textContent = isEnglish ? 
+                "Starting Bubble Sort Algorithm" : 
+                "开始冒泡排序算法";
+            
+            await new Promise(resolve => setTimeout(resolve, animationSpeed));
+            
+            for (let i = 0; i < n - 1 && !sorted; i++) {
+                sorted = true;
+                passes++;
+                passesElement.textContent = passes;
+                
+                currentStep.textContent = isEnglish ? 
+                    `Pass ${passes}: Comparing adjacent elements` : 
+                    `第 ${passes} 轮遍历: 比较相邻元素`;
+                
+                for (let j = 0; j < n - i - 1; j++) {
+                    comparisons++;
+                    comparisonsElement.textContent = comparisons;
+                    
+                    // 高亮正在比较的元素
+                    highlightComparison(j, j+1);
+                    
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed));
+                    
+                    if (array[j] > array[j+1]) {
+                        // 交换元素
+                        swaps++;
+                        swapsElement.textContent = swaps;
+                        
+                        swapElements(j, j+1);
+                        sorted = false;
+                        
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed));
+                    }
+                    
+                    // 移除高亮
+                    removeHighlight(j, j+1);
+                }
+                
+                // 标记本轮已排序的元素
+                markAsSorted(n - i - 1);
+                
+                // 更新当前步骤
+                currentStep.textContent = isEnglish ? 
+                    `Pass ${passes} completed. Largest element is in position.` : 
+                    `第 ${passes} 轮遍历完成。最大元素已到位。`;
+                
+                await new Promise(resolve => setTimeout(resolve, animationSpeed));
+            }
+            
+            // 标记所有元素为已排序
+            for (let i = 0; i < n; i++) {
+                markAsSorted(i);
+            }
+            
+            // 最终步骤
+            currentStep.textContent = isEnglish ? 
+                "Array is now completely sorted!" : 
+                "数组现已完全排序！";
+
+            // 播放完成：设置全局标记、派发事件、插入选择器标记
+            try {
+                window.playFinished = true;
+                window.dispatchEvent(new Event('recording:finished'));
+                var flag = document.createElement('div');
+                flag.id = 'finished-flag';
+                flag.style.display = 'none';
+                document.body.appendChild(flag);
+            } catch (e) { /* no-op */ }
+        }
+        
+        // 初始化
+        function init() {
+            renderArray();
+            updateStats();
+            
+            // 开始排序动画
+            setTimeout(() => {
+                bubbleSort();
+            }, 2000);
+        }
+        
+        // 语言切换
+        languageToggle.addEventListener('click', function() {
+            isEnglish = !isEnglish;
+            languageToggle.textContent = isEnglish ? "中/EN" : "EN/中";
+            
+            // 更新标题
+            document.querySelector('h1').textContent = isEnglish ? 
+                "Bubble Sort Algorithm" : "冒泡排序算法";
+            document.querySelector('.subtitle').textContent = isEnglish ? 
+                "Visual Demonstration & Explanation" : "可视化演示与讲解";
+            
+            // 更新图例
+            const legendItems = document.querySelectorAll('.legend-item span');
+            if (isEnglish) {
+                legendItems[0].textContent = "Unsorted";
+                legendItems[1].textContent = "Comparing";
+                legendItems[2].textContent = "Sorted";
+            } else {
+                legendItems[0].textContent = "未比较元素";
+                legendItems[1].textContent = "正在比较";
+                legendItems[2].textContent = "已排序";
+            }
+            
+            // 更新统计标签
+            const statLabels = document.querySelectorAll('.stat-label');
+            if (isEnglish) {
+                statLabels[0].textContent = "Comparisons";
+                statLabels[1].textContent = "Swaps";
+                statLabels[2].textContent = "Passes";
+            } else {
+                statLabels[0].textContent = "比较次数";
+                statLabels[1].textContent = "交换次数";
+                statLabels[2].textContent = "遍历轮数";
+            }
+            
+            // 更新算法信息区域
+            const stepInfos = document.querySelectorAll('.step-info');
+            if (isEnglish) {
+                document.querySelector('.info-title').textContent = "Algorithm Explanation";
+                stepInfos[0].innerHTML = `<strong>Step 1:</strong> Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.`;
+                stepInfos[1].innerHTML = `<strong>Step 2:</strong> The pass through the list is repeated until the list is sorted. Each pass bubbles the largest element to its correct position.`;
+                stepInfos[2].innerHTML = `<strong>Step 3:</strong> The algorithm gets its name because smaller elements "bubble" to the top of the list gradually.`;
+                stepInfos[3].innerHTML = `<strong>Step 4:</strong> Bubble Sort has a time complexity of O(n²) in worst and average cases, and O(n) in the best case.`;
+            } else {
+                document.querySelector('.info-title').textContent = "算法讲解";
+                stepInfos[0].innerHTML = `<strong>步骤 1:</strong> 冒泡排序是一种简单的排序算法，它重复地遍历要排序的列表，比较相邻的元素，如果它们的顺序错误就交换它们。`;
+                stepInfos[1].innerHTML = `<strong>步骤 2:</strong> 遍历列表的工作会重复进行，直到列表完全排序。每次遍历都会将最大的元素"冒泡"到其正确位置。`;
+                stepInfos[2].innerHTML = `<strong>步骤 3:</strong> 该算法之所以称为"冒泡排序"，是因为较小的元素会像气泡一样逐渐"浮"到列表的顶端。`;
+                stepInfos[3].innerHTML = `<strong>步骤 4:</strong> 冒泡排序的时间复杂度在最坏和平均情况下为O(n²)，在最好情况下为O(n)。`;
+            }
+        });
+        
+        // 启动
+        init();
+    </script>
+</body>
+</html>

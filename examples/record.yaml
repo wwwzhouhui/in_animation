@@ -1,0 +1,7 @@
+steps:
+  - wait: { state: domcontentloaded, timeout: 10000 }
+  - waitFor: { selector: 'button#start', timeout: 10000 }
+  - click: { selector: 'button#start' }
+  - waitFor: { selector: '.card.loaded', timeout: 5000 }
+  - type: { selector: '#q', text: 'Playwright 录制' }
+  - delay: 1.0

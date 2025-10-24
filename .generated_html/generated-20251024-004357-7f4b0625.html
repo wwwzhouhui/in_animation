@@ -1,0 +1,236 @@
+html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>酸碱中和实验</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #223;
+      --accent: #4a90e2;
+      --acid: #ff6b6b;
+      --base: #51cf66;
+      --neutral: #74c0fc;
+      --sub: #7b8ba8;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; background: var(--bg); overflow: hidden; color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    #animation-container {
+      position: relative; width: 1280px; height: 720px; background: var(--panel); overflow: hidden;
+      box-shadow: 0 0 50px rgba(0,0,0,0.08); border-radius: 20px;
+    }
+    .subtitles { 
+      position: absolute; left: 0; right: 0; bottom: 40px; height: 180px; 
+      display: flex; align-items: center; justify-content: center; pointer-events: none; 
+    }
+    .subtitles .line {
+      background: rgba(255,255,255,0.85); color: #111; border-radius: 12px; 
+      padding: 18px 24px; font-size: 40px; line-height: 1.3; max-width: 80%; 
+      text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    .lab-equipment {
+      position: absolute;
+      transition: all 0.6s ease;
+    }
+    .beaker {
+      width: 300px; height: 400px; border: 8px solid #ddd; border-bottom: 16px solid #ddd;
+      border-radius: 0 0 80px 80px; background: rgba(255,255,255,0.8);
+      position: absolute; bottom: 150px; overflow: hidden;
+    }
+    .liquid {
+      position: absolute; bottom: 0; width: 100%; transition: all 1s ease;
+    }
+    .acid-liquid { background: linear-gradient(to top, #ff6b6b, #ff8787); }
+    .base-liquid { background: linear-gradient(to top, #51cf66, #69db7c); }
+    .neutral-liquid { background: linear-gradient(to top, #74c0fc, #91d7ff); }
+    .ph-indicator {
+      position: absolute; width: 40px; height: 40px; border-radius: 50%;
+      background: #ff6b6b; transition: all 1s ease;
+    }
+    .molecule {
+      position: absolute; font-size: 24px; opacity: 0;
+    }
+    .h-plus { color: var(--acid); }
+    .oh-minus { color: var(--base); }
+    .h2o { color: var(--neutral); }
+    .burette {
+      width: 80px; height: 450px; border: 6px solid #ddd; border-bottom: none;
+      border-radius: 40px 40px 0 0; background: rgba(255,255,255,0.8);
+      position: absolute; top: 50px; overflow: hidden;
+    }
+    .burette-liquid {
+      position: absolute; bottom: 0; width: 100%; 
+      background: linear-gradient(to top, #51cf66, #69db7c);
+    }
+    .title {
+      position: absolute; top: 80px; left: 0; right: 0; text-align: center;
+      font-size: 64px; font-weight: 700; color: var(--text); opacity: 0;
+    }
+    .equation {
+      position: absolute; top: 180px; left: 0; right: 0; text-align: center;
+      font-size: 48px; opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="animation-container">
+    <div class="title">酸碱中和实验</div>
+    <div class="equation">H⁺ + OH⁻ → H₂O</div>
+    
+    <div class="lab-equipment beaker" style="left: 490px;"></div>
+    <div class="lab-equipment burette" style="left: 600px;"></div>
+    <div class="burette-liquid" id="burette-liquid" style="height: 0%;"></div>
+    
+    <div class="liquid acid-liquid" id="acid-liquid" style="height: 60%;"></div>
+    <div class="liquid base-liquid" id="base-liquid" style="height: 0%; opacity: 0;"></div>
+    <div class="liquid neutral-liquid" id="neutral-liquid" style="height: 0%; opacity: 0;"></div>
+    
+    <div class="ph-indicator" id="ph-indicator" style="left: 620px; bottom: 200px;"></div>
+    
+    <div class="subtitles"><div id="sub-cn" class="line"></div></div>
+    <div class="subtitles" style="bottom: 240px;"><div id="sub-en" class="line"></div></div>
+  </div>
+  <script>
+    function setSubtitles(cn, en) {
+      const cnEl = document.getElementById('sub-cn');
+      const enEl = document.getElementById('sub-en');
+      if (cnEl) cnEl.textContent = cn || '';
+      if (enEl) enEl.textContent = en || '';
+    }
+
+    function markAnimationFinished() {
+      try {
+        window.playFinished = true;
+        window.dispatchEvent(new Event('recording:finished'));
+        var flag = document.createElement('div');
+        flag.id = 'finished-flag';
+        flag.style.display = 'none';
+        document.body.appendChild(flag);
+      } catch (e) { /* no-op */ }
+    }
+
+    // 动画时间轴
+    setTimeout(() => {
+      document.querySelector('.title').style.opacity = '1';
+      setSubtitles('酸碱中和实验', 'Acid-Base Neutralization Experiment');
+    }, 500);
+
+    setTimeout(() => {
+      document.querySelector('.title').style.opacity = '0';
+      setSubtitles('实验开始时，烧杯中含有酸性溶液', 'The experiment begins with an acidic solution in the beaker');
+      
+      // 显示酸性溶液
+      document.getElementById('acid-liquid').style.height = '60%';
+      
+      // 显示PH指示剂（红色）
+      document.getElementById('ph-indicator').style.background = '#ff6b6b';
+    }, 3000);
+
+    setTimeout(() => {
+      setSubtitles('现在开始滴加碱性溶液', 'Now adding basic solution drop by drop');
+      
+      // 滴定管开始填充
+      document.getElementById('burette-liquid').style.height = '80%';
+    }, 7000);
+
+    setTimeout(() => {
+      setSubtitles('酸碱开始反应：H⁺ + OH⁻ → H₂O', 'Acid-base reaction begins: H⁺ + OH⁻ → H₂O');
+      
+      // 显示化学方程式
+      document.querySelector('.equation').style.opacity = '1';
+      
+      // 开始滴定
+      const buretteLiquid = document.getElementById('burette-liquid');
+      let height = 80;
+      const drainInterval = setInterval(() => {
+        height -= 0.5;
+        buretteLiquid.style.height = height + '%';
+        
+        if (height <= 0) {
+          clearInterval(drainInterval);
+        }
+      }, 50);
+      
+      // 同时碱性溶液在烧杯中上升
+      const baseLiquid = document.getElementById('base-liquid');
+      baseLiquid.style.opacity = '1';
+      let baseHeight = 0;
+      const baseInterval = setInterval(() => {
+        baseHeight += 0.3;
+        baseLiquid.style.height = baseHeight + '%';
+        
+        if (baseHeight >= 60) {
+          clearInterval(baseInterval);
+        }
+      }, 50);
+    }, 11000);
+
+    setTimeout(() => {
+      setSubtitles('PH指示剂颜色发生变化', 'PH indicator changes color');
+      
+      // PH指示剂颜色渐变
+      const indicator = document.getElementById('ph-indicator');
+      let hue = 0; // 红色
+      const colorInterval = setInterval(() => {
+        hue += 2;
+        if (hue <= 120) { // 从红色到绿色
+          indicator.style.background = `hsl(${hue}, 100%, 50%)`;
+        } else {
+          clearInterval(colorInterval);
+        }
+      }, 30);
+    }, 20000);
+
+    setTimeout(() => {
+      setSubtitles('酸碱完全中和，生成中性溶液', 'Complete neutralization produces neutral solution');
+      
+      // 酸性溶液和碱性溶液消失，中性溶液出现
+      document.getElementById('acid-liquid').style.opacity = '0';
+      document.getElementById('base-liquid').style.opacity = '0';
+      document.getElementById('neutral-liquid').style.opacity = '1';
+      document.getElementById('neutral-liquid').style.height = '60%';
+    }, 25000);
+
+    setTimeout(() => {
+      setSubtitles('酸碱中和是重要的化学反应', 'Acid-base neutralization is an important chemical reaction');
+      
+      // 显示水分子动画
+      for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+          const water = document.createElement('div');
+          water.className = 'molecule h2o';
+          water.textContent = 'H₂O';
+          water.style.left = (500 + Math.random() * 300) + 'px';
+          water.style.bottom = (150 + Math.random() * 200) + 'px';
+          water.style.opacity = '1';
+          document.getElementById('animation-container').appendChild(water);
+          
+          // 水分子上升消失
+          setTimeout(() => {
+            water.style.bottom = '400px';
+            water.style.opacity = '0';
+            setTimeout(() => water.remove(), 1000);
+          }, 500);
+        }, i * 200);
+      }
+    }, 30000);
+
+    setTimeout(() => {
+      setSubtitles('实验结束，谢谢观看！', 'Experiment complete, thank you for watching!');
+      document.querySelector('.equation').style.opacity = '0';
+    }, 38000);
+
+    setTimeout(() => {
+      setSubtitles('', '');
+      markAnimationFinished();
+    }, 45000);
+  </script>
+</body>
+</html>

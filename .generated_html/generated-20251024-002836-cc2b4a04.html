@@ -1,0 +1,444 @@
+html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>快速排序算法可视化</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+      --accent: #3b82f6;
+      --pivot: #ef4444;
+      --sorted: #10b981;
+      --comparing: #f59e0b;
+      --pointer: #8b5cf6;
+      --sub: #64748b;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; background: var(--bg); overflow: hidden; color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    #animation-container {
+      position: relative; width: 1280px; height: 720px; background: var(--panel); overflow: hidden;
+      box-shadow: 0 0 50px rgba(0,0,0,0.08); border-radius: 20px;
+    }
+    .subtitles { 
+      position: absolute; left: 0; right: 0; bottom: 40px; height: 180px; 
+      display: flex; align-items: center; justify-content: center; pointer-events: none; 
+    }
+    .subtitles .line {
+      background: rgba(255,255,255,0.95); color: #111; border-radius: 16px; 
+      padding: 20px 32px; font-size: 36px; line-height: 1.4; max-width: 85%; 
+      text-align: center; box-shadow: 0 12px 32px rgba(0,0,0,.12);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    /* 主标题 */
+    .title {
+      position: absolute;
+      top: 50px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 44px;
+      font-weight: 700;
+      color: var(--text);
+      opacity: 0;
+      transform: translateY(-30px);
+      transition: all 1s ease;
+    }
+    
+    /* 数组容器 */
+    .array-container {
+      position: absolute;
+      top: 180px;
+      left: 100px;
+      right: 100px;
+      height: 350px;
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      gap: 16px;
+    }
+    
+    .array-element {
+      width: 80px;
+      background: linear-gradient(135deg, var(--accent), #1d4ed8);
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 32px;
+      font-weight: 600;
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+      position: relative;
+    }
+    
+    .pivot-element {
+      background: linear-gradient(135deg, var(--pivot), #dc2626);
+      transform: scale(1.15);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+      z-index: 10;
+    }
+    
+    .comparing-element {
+      background: linear-gradient(135deg, var(--comparing), #d97706);
+      transform: scale(1.1);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+    
+    .sorted-element {
+      background: linear-gradient(135deg, var(--sorted), #047857);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+    
+    /* 分区指示器 */
+    .partition-indicator {
+      position: absolute;
+      height: 6px;
+      background: linear-gradient(90deg, var(--pivot), #f97316);
+      border-radius: 3px;
+      opacity: 0;
+      transition: all 0.8s ease;
+    }
+    
+    /* 指针样式 */
+    .pointer {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.6s ease;
+      z-index: 5;
+    }
+    
+    .left-pointer {
+      background: var(--pointer);
+    }
+    
+    .right-pointer {
+      background: var(--comparing);
+    }
+    
+    /* 信息面板 */
+    .info-panel {
+      position: absolute;
+      top: 560px;
+      left: 100px;
+      right: 100px;
+      height: 100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      background: rgba(248, 250, 252, 0.9);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      opacity: 0;
+    }
+    
+    .info-item {
+      text-align: center;
+      font-size: 28px;
+      color: var(--text);
+    }
+    
+    .info-value {
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="animation-container">
+    <div class="title">快速排序算法可视化</div>
+    
+    <div class="array-container" id="main-array">
+      <!-- 数组元素将通过JS动态生成 -->
+    </div>
+    
+    <div class="partition-indicator" id="partition-indicator"></div>
+    <div class="pointer left-pointer" id="left-pointer">L</div>
+    <div class="pointer right-pointer" id="right-pointer">R</div>
+    
+    <div class="info-panel" id="info-panel">
+      <div class="info-item">
+        <div>当前操作</div>
+        <div class="info-value" id="current-operation">初始化</div>
+      </div>
+      <div class="info-item">
+        <div>时间复杂度</div>
+        <div class="info-value">O(n log n)</div>
+      </div>
+      <div class="info-item">
+        <div>空间复杂度</div>
+        <div class="info-value">O(log n)</div>
+      </div>
+    </div>
+    
+    <div class="subtitles">
+      <div id="sub-cn" class="line"></div>
+    </div>
+    <div class="subtitles" style="bottom: 240px;">
+      <div id="sub-en" class="line"></div>
+    </div>
+  </div>
+
+  <script>
+    // 初始化数组数据
+    const initialArray = [7, 2, 9, 4, 6, 1, 8, 5, 3];
+    let currentArray = [...initialArray];
+    let operationCount = 0;
+    
+    function setSubtitles(cn, en) {
+      const cnEl = document.getElementById('sub-cn');
+      const enEl = document.getElementById('sub-en');
+      if (cnEl) cnEl.textContent = cn || '';
+      if (enEl) enEl.textContent = en || '';
+    }
+
+    function updateInfoPanel(operation) {
+      const operationEl = document.getElementById('current-operation');
+      if (operationEl) {
+        operationEl.textContent = operation;
+      }
+      operationCount++;
+    }
+
+    function createArrayElements() {
+      const container = document.getElementById('main-array');
+      container.innerHTML = '';
+      
+      const maxHeight = Math.max(...currentArray);
+      
+      currentArray.forEach((value, index) => {
+        const element = document.createElement('div');
+        element.className = 'array-element';
+        element.style.height = `${(value / maxHeight) * 280 + 70}px`;
+        element.textContent = value;
+        element.id = `element-${index}`;
+        container.appendChild(element);
+      });
+    }
+
+    function highlightElement(index, className) {
+      const element = document.getElementById(`element-${index}`);
+      if (element) {
+        element.className = `array-element ${className}`;
+      }
+    }
+
+    function resetElement(index) {
+      const element = document.getElementById(`element-${index}`);
+      if (element) {
+        element.className = 'array-element';
+      }
+    }
+
+    function setPointer(id, index, visible) {
+      const pointer = document.getElementById(id);
+      const element = document.getElementById(`element-${index}`);
+      if (element && pointer) {
+        const rect = element.getBoundingClientRect();
+        const containerRect = document.getElementById('animation-container').getBoundingClientRect();
+        
+        pointer.style.left = `${rect.left + rect.width / 2 - 12 - containerRect.left}px`;
+        pointer.style.top = `${rect.top - 45 - containerRect.top}px`;
+        pointer.style.opacity = visible ? 1 : 0;
+      }
+    }
+
+    function setPartitionIndicator(low, high, visible) {
+      const indicator = document.getElementById('partition-indicator');
+      const lowElement = document.getElementById(`element-${low}`);
+      const highElement = document.getElementById(`element-${high}`);
+      
+      if (lowElement && highElement && indicator) {
+          const lowRect = lowElement.getBoundingClientRect();
+          const highRect = highElement.getBoundingClientRect();
+          const containerRect = document.getElementById('animation-container').getBoundingClientRect();
+          
+          indicator.style.left = `${lowRect.left - containerRect.left}px`;
+          indicator.style.width = `${highRect.right - lowRect.left}px`;
+          indicator.style.top = `${lowRect.top - 35 - containerRect.top}px`;
+          indicator.style.opacity = visible ? 1 : 0;
+        }
+      }
+
+      async function swapElements(i, j) {
+        return new Promise(resolve => {
+          const elementI = document.getElementById(`element-${i}`);
+          const elementJ = document.getElementById(`element-${j}`);
+          
+          if (elementI && elementJ) {
+            const temp = currentArray[i];
+            currentArray[i] = currentArray[j];
+            currentArray[j] = temp;
+            
+            // 平滑交换动画
+            elementI.style.transform = 'translateY(-20px)';
+          elementJ.style.transform = 'translateY(-20px)';
+          
+          setTimeout(() => {
+            elementI.style.height = `${(currentArray[i] / Math.max(...currentArray)) * 280 + 70}px`;
+            elementJ.style.height = `${(currentArray[j] / Math.max(...currentArray)) * 280 + 70}px`;
+            elementI.textContent = currentArray[i];
+            elementJ.textContent = currentArray[j];
+            
+            setTimeout(() => {
+              elementI.style.transform = 'translateY(0)';
+              elementJ.style.transform = 'translateY(0)';
+              setTimeout(resolve, 300);
+            }, 400);
+          }, 200);
+        } else {
+          resolve();
+        }
+      });
+    }
+
+    async function quickSortAnimation() {
+      // 开场动画
+      setSubtitles('欢迎来到快速排序算法可视化演示', 'Welcome to Quick Sort Algorithm Visualization');
+      updateInfoPanel('初始化');
+      
+      document.querySelector('.title').style.opacity = '1';
+      document.querySelector('.title').style.transform = 'translateY(0)';
+      document.getElementById('info-panel').style.opacity = '1';
+      createArrayElements();
+      
+      await new Promise(resolve => setTimeout(resolve, 3500));
+      
+      setSubtitles('快速排序是一种高效的分治排序算法', 'Quick Sort is an efficient divide and conquer sorting algorithm');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // 开始排序演示
+      await quickSort(0, currentArray.length - 1);
+      
+      // 收尾动画
+      setSubtitles('排序完成！数组已按升序排列', 'Sorting completed! Array is now in ascending order');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      setSubtitles('快速排序在最坏情况下时间复杂度为O(n²)，平均为O(n log n)', 'Quick sort has worst-case O(n²) and average O(n log n) time complexity');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      setSubtitles('感谢观看快速排序算法演示', 'Thank you for watching the Quick Sort demonstration');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      markAnimationFinished();
+    }
+
+    async function quickSort(low, high) {
+      if (low < high) {
+        setSubtitles(
+          `开始处理子数组 [${low}, ${high}]，选择基准元素`, 
+          `Processing subarray [${low}, ${high}], selecting pivot element`
+        );
+        updateInfoPanel('选择基准');
+        
+        // 选择最后一个元素作为基准
+        const pivotIndex = high;
+        highlightElement(pivotIndex, 'pivot-element');
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        
+        const pivotValue = currentArray[pivotIndex];
+        setSubtitles(
+          `基准元素是 ${pivotValue}，开始分区操作`, 
+          `Pivot is ${pivotValue}, starting partition operation`
+        );
+        updateInfoPanel('分区操作');
+        
+        let i = low - 1;
+        
+        setPointer('left-pointer', i >= 0 ? i : low, true);
+        setPointer('right-pointer', low, true);
+        setPartitionIndicator(low, high, true);
+        
+        for (let j = low; j < high; j++) {
+          setSubtitles(
+            `比较元素 ${currentArray[j]} 与基准 ${pivotValue}`, 
+          `Comparing element ${currentArray[j]} with pivot ${pivotValue}`
+        );
+        updateInfoPanel('比较元素');
+          highlightElement(j, 'comparing-element');
+          await new Promise(resolve => setTimeout(resolve, 1800));
+          
+          if (currentArray[j] < pivotValue) {
+            i++;
+            setSubtitles(
+              `元素 ${currentArray[j]} 小于基准，进行交换`, 
+              `Element ${currentArray[j]} is smaller than pivot, performing swap`
+            );
+            updateInfoPanel('元素交换');
+            
+            if (i !== j) {
+              await swapElements(i, j);
+            }
+            
+            setPointer('left-pointer', i, true);
+          }
+          
+          resetElement(j);
+          setPointer('right-pointer', j + 1, true);
+        }
+        
+        // 将基准放到正确位置
+        setSubtitles(
+          `将基准元素 ${pivotValue} 放置到最终位置`, 
+          `Placing pivot ${pivotValue} in its final position`
+        );
+        updateInfoPanel('基准归位');
+        await swapElements(i + 1, high);
+        
+        setPointer('left-pointer', i, false);
+        setPointer('right-pointer', high, false);
+        setPartitionIndicator(low, high, false);
+        resetElement(pivotIndex);
+        highlightElement(i + 1, 'sorted-element');
+        
+        const pivotPos = i + 1;
+        setSubtitles(
+          `基准归位到位置 ${pivotPos}，递归处理左右子数组`, 
+          `Pivot placed at position ${pivotPos}, recursively processing subarrays`
+        );
+        updateInfoPanel('递归处理');
+        await new Promise(resolve => setTimeout(resolve, 2200));
+        
+        // 递归处理左右子数组
+        await quickSort(low, pivotPos - 1);
+        await quickSort(pivotPos + 1, high);
+      }
+    }
+
+    function markAnimationFinished() {
+      try {
+        window.playFinished = true;
+        window.dispatchEvent(new Event('recording:finished'));
+        var flag = document.createElement('div');
+        flag.id = 'finished-flag';
+        flag.style.display = 'none';
+        document.body.appendChild(flag);
+      } catch (e) { /* no-op */ }
+    }
+
+    // 启动动画
+    setTimeout(quickSortAnimation, 1000);
+  </script>
+</body>
+</html>

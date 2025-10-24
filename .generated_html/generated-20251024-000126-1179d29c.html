@@ -1,0 +1,247 @@
+html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>冒泡算法</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #223;
+      --accent: #4a90e2;
+      --accent-light: #7bb1f0;
+      --compare: #ff6b6b;
+      --sorted: #51cf66;
+      --sub: #7b8ba8;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; background: var(--bg); overflow: hidden; color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    #animation-container {
+      position: relative; width: 1280px; height: 720px; background: var(--panel); overflow: hidden;
+      box-shadow: 0 0 50px rgba(0,0,0,0.08); border-radius: 20px;
+    }
+    .subtitles { 
+      position: absolute; left: 0; right: 0; bottom: 40px; height: 180px; 
+      display: flex; align-items: center; justify-content: center; pointer-events: none; 
+    }
+    .subtitles .line {
+      background: rgba(255,255,255,0.85); color: #111; border-radius: 12px; 
+      padding: 18px 24px; font-size: 40px; line-height: 1.3; max-width: 80%; 
+      text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    .title {
+      position: absolute; top: 40px; left: 0; right: 0; text-align: center;
+      font-size: 48px; font-weight: 600; color: var(--accent);
+    }
+    .array-container {
+      position: absolute; top: 160px; left: 0; right: 0; height: 300px;
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 20px; padding: 0 80px;
+    }
+    .array-element {
+      width: 80px; background: var(--accent-light); border-radius: 8px 8px 0 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 600; color: white;
+      transition: all 0.5s ease;
+    }
+    .comparing { background: var(--compare); transform: scale(1.1); }
+    .sorted { background: var(--sorted); }
+    .code-panel {
+      position: absolute; top: 500px; left: 40px; right: 40px; height: 120px;
+      background: #f8f9fa; border-radius: 12px; padding: 20px;
+      font-family: 'Monaco', 'Consolas', monospace; font-size: 24px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .highlight { color: var(--compare); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div id="animation-container">
+    <div class="title">冒泡排序算法</div>
+    
+    <div class="array-container" id="array-container">
+      <!-- 数组元素将由JS动态生成 -->
+    </div>
+    
+    <div class="code-panel" id="code-panel">
+      for (let i = 0; i < n-1; i++) { for (let j = 0; j < n-i-1; j++) { if (arr[j] > arr[j+1]) { swap(arr[j], arr[j+1]); } } }
+    </div>
+    
+    <div class="subtitles">
+      <div id="sub-cn" class="line"></div>
+    </div>
+    <div class="subtitles" style="bottom: 240px;">
+      <div id="sub-en" class="line"></div>
+    </div>
+  </div>
+
+  <script>
+    function setSubtitles(cn, en) {
+      const cnEl = document.getElementById('sub-cn');
+      const enEl = document.getElementById('sub-en');
+      if (cnEl) cnEl.textContent = cn || '';
+      if (enEl) enEl.textContent = en || '';
+    }
+
+    function markAnimationFinished() {
+      try {
+        window.playFinished = true;
+        window.dispatchEvent(new Event('recording:finished'));
+        var flag = document.createElement('div');
+        flag.id = 'finished-flag';
+        flag.style.display = 'none';
+        document.body.appendChild(flag);
+      } catch (e) { /* no-op */ }
+    }
+
+    // 初始化数组
+    const array = [64, 34, 25, 12, 22, 11, 90];
+    let currentStep = 0;
+    const steps = [];
+
+    // 创建数组可视化元素
+    function createArrayElements() {
+      const container = document.getElementById('array-container');
+      container.innerHTML = '';
+      
+      array.forEach((value, index) => {
+        const element = document.createElement('div');
+        element.className = 'array-element';
+        element.style.height = `${value * 3}px`;
+        element.textContent = value;
+        element.id = `elem-${index}`;
+        container.appendChild(element);
+      });
+    }
+
+    // 冒泡排序步骤生成
+    function generateBubbleSortSteps() {
+      const arr = [...array];
+      const n = arr.length;
+      
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+          // 比较步骤
+          steps.push({
+            type: 'compare',
+            indices: [j, j + 1],
+            message: `比较第 ${j+1} 和第 ${j+2} 个元素`,
+            messageEn: `Comparing elements at positions ${j+1} and ${j+2}`
+          });
+          
+          if (arr[j] > arr[j + 1]) {
+            // 交换步骤
+            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            steps.push({
+              type: 'swap',
+              indices: [j, j + 1],
+              message: `交换第 ${j+1} 和第 ${j+2} 个元素`,
+              messageEn: `Swapping elements at positions ${j+1} and ${j+2}`
+            });
+          }
+        }
+        // 标记已排序元素
+        steps.push({
+          type: 'sorted',
+          index: n - i - 1,
+          message: `第 ${n - i} 个元素已到达正确位置`,
+          messageEn: `Element at position ${n - i} is now in correct position`
+        });
+      }
+      
+      // 完成步骤
+      steps.push({
+        type: 'complete',
+        message: '冒泡排序完成！数组已完全排序',
+        messageEn: 'Bubble sort completed! Array is fully sorted'
+      });
+    }
+
+    // 执行动画步骤
+    function executeStep(stepIndex) {
+      if (stepIndex >= steps.length) {
+        markAnimationFinished();
+        return;
+      }
+      
+      const step = steps[stepIndex];
+      setSubtitles(step.message, step.messageEn);
+      
+      switch (step.type) {
+        case 'compare':
+          step.indices.forEach(index => {
+            const elem = document.getElementById(`elem-${index}`);
+            elem.classList.add('comparing');
+          });
+          setTimeout(() => {
+            step.indices.forEach(index => {
+              const elem = document.getElementById(`elem-${index}`);
+              elem.classList.remove('comparing');
+            });
+            setTimeout(() => executeStep(stepIndex + 1), 800);
+          }, 1000);
+          break;
+          
+        case 'swap':
+          const [i, j] = step.indices;
+          const elemI = document.getElementById(`elem-${i}`);
+          const elemJ = document.getElementById(`elem-${j}`);
+          
+          // 交换动画
+          elemI.style.transform = `translateX(${(j - i) * 100}px)`;
+          elemJ.style.transform = `translateX(${(i - j) * 100}px)`;
+          
+          setTimeout(() => {
+            // 实际交换DOM元素
+            const container = document.getElementById('array-container');
+            const temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+            
+            createArrayElements();
+            setTimeout(() => executeStep(stepIndex + 1), 500);
+          }, 800);
+          break;
+          
+        case 'sorted':
+          const sortedElem = document.getElementById(`elem-${step.index}`);
+          sortedElem.classList.add('sorted');
+          setTimeout(() => executeStep(stepIndex + 1), 1000);
+          break;
+          
+        case 'complete':
+          // 将所有元素标记为已排序
+          array.forEach((_, index) => {
+            const elem = document.getElementById(`elem-${index}`);
+            if (elem) elem.classList.add('sorted');
+          });
+          setTimeout(() => markAnimationFinished(), 2000);
+          break;
+      }
+    }
+
+    // 初始化动画
+    function initAnimation() {
+      createArrayElements();
+      generateBubbleSortSteps();
+      
+      // 开场动画
+      setSubtitles('欢迎学习冒泡排序算法', 'Welcome to Bubble Sort Algorithm');
+      setTimeout(() => {
+        setSubtitles('我们将通过可视化演示理解冒泡排序的工作原理', 
+                     'We will demonstrate how bubble sort works through visualization');
+        setTimeout(() => executeStep(0), 2000);
+      }, 2000);
+    }
+
+    // 启动动画
+    window.addEventListener('load', initAnimation);
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+openai
+jinja2
+pytz
+requests
+playwright
+pyyaml
+imageio-ffmpeg

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructional Animation - 教学动画生成器</title>
+    <link rel="stylesheet" href="/static/style.css?v={{ time }}">
+    <link rel="icon" href="/static/favicon.svg?v={{ time }}" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+
+</head>
+<body class="show-initial-view">
+
+    <div id="language-switcher" class="language-switcher">
+        <button data-lang="zh">中</button>
+        <button data-lang="en">EN</button>
+    </div>
+
+    <div id="initial-view" class="initial-view">
+        <img src="/static/logo.svg" alt="Instructional Animation Logo" class="logo" id="logo-initial">
+
+        <div class="initial-content">
+            <div class="hero-group">
+                <h1 data-translate-key="heroTitle">在此赋予概念以生命，转瞬之间</h1>
+                <form id="initial-form" class="initial-form">
+                    <div id="animated-placeholder" class="animated-placeholder"></div>
+                    <input type="text" id="initial-input" required>
+                    <button type="submit" data-translate-key="startCreatingTitle" title="开始创作">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M3 20V4l19 8Z"/></svg>
+                    </button>
+                </form>
+                <div id="topic-suggestions" class="topic-suggestions"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-view" class="chat-view">
+        <header class="chat-header">
+            <button id="new-chat-button" class="new-chat-button" data-translate-key="newChatTitle" title="新对话">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                <span data-translate-key="newChat">新对话</span>
+            </button>
+            <img src="/static/logo.svg" alt="Instructional Animation Logo" class="logo" id="logo-chat">
+        </header>
+        <main id="chat-log" class="chat-log"></main>
+        <footer class="chat-footer">
+            <form id="chat-form" class="chat-form">
+                <div class="input-container">
+                    <input type="text" id="chat-input" data-translate-key="chatPlaceholder" placeholder="AI 生成结果具有随机性，您可在此输入修改意见，通过多轮对话调整结果" autocomplete="off" required>
+                    <button type="submit" class="submit-button" data-translate-key="sendTitle" title="发送">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </form>
+        </footer>
+    </div>
+
+
+
+    <template id="user-message-template">
+        <div class="message-group user"><div class="message-bubble">${text}</div></div>
+    </template>
+    
+    <template id="agent-status-template">
+        <div class="message-group agent">
+            <div class="status-bubble">
+                <div class="thinking-dots"><span></span><span></span><span></span></div>
+                <p>${text}</p>
+            </div>
+        </div>
+    </template>
+
+    <template id="agent-error-template">
+        <div class="message-group agent">
+            <div class="status-bubble error-bubble">
+                <svg viewBox="0 0 24 24" class="icon-error"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+                <p>${text}</p>
+            </div>
+        </div>
+    </template>
+
+    <template id="agent-code-template">
+        <div class="message-group agent has-code">
+            <details class="code-details" open>
+                <summary class="code-summary">
+                    <div class="summary-title">
+                        <svg class="icon-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        <span data-translate-key="generatingCode">生成代码中...</span>
+                    </div>
+                    <svg class="icon-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                </summary>
+                <div class="code-content"><pre><code></code></pre></div>
+            </details>
+        </div>
+    </template>
+    
+    <template id="animation-player-template">
+        <div class="message-group agent has-player">
+            <div class="player-container">
+                <div class="iframe-wrapper"><iframe class="animation-iframe" sandbox="allow-scripts allow-same-origin"></iframe></div>
+                <div class="player-actions">
+                    <button class="action-button open-new-window">
+                        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        <span data-translate-key="openInNewWindow">在新窗口中打开</span>
+                    </button>
+                    <button class="action-button save-html">
+                        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        <span data-translate-key="saveAsHTML">保存为 HTML</span>
+                    </button>
+                    <button class="action-button export-video">
+                        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z" /><path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z" /></svg>
+                        <span data-translate-key="exportAsVideo">导出为视频</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <div id="feature-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-button" class="modal-close-button" title="Close">×</button>
+            <p data-translate-key="featureComingSoon">该功能正在开发中...</p>
+            <button id="modal-github-button" class="modal-button" data-translate-key="visitGitHub">访问 GitHub</button>
+        </div>
+    </div>
+
+    <script src="/static/script.js?v={{ time }}"></script>
+
+    <div id="overlay" class="overlay" style="display: none;"></div>
+    <div id="warning-box" class="warning-box" style="display: none;">
+    <span id="warning-message">警告信息</span>
+    <button class="close-button" onclick="hideWarning()">×</button>
+    </div>
+</body>
+</html>

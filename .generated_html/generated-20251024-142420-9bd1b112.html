@@ -1,0 +1,214 @@
+html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>勾股定理 | Pythagorean Theorem</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #223;
+      --accent: #4a90e2;
+      --accent-dark: #2c6cb0;
+      --sub: #7b8ba8;
+      --success: #34c759;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; background: var(--bg); overflow: hidden; color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    #animation-container {
+      position: relative; width: 1280px; height: 720px; background: var(--panel); overflow: hidden;
+      box-shadow: 0 0 50px rgba(0,0,0,0.08); border-radius: 20px;
+    }
+    .subtitles { 
+      position: absolute; left: 0; right: 0; bottom: 40px; height: 180px; 
+      display: flex; align-items: center; justify-content: center; pointer-events: none; 
+    }
+    .subtitles .line {
+      background: rgba(255,255,255,0.85); color: #111; border-radius: 12px; 
+      padding: 18px 24px; font-size: 40px; line-height: 1.3; max-width: 80%; 
+      text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    
+    /* 动画元素样式 */
+    .math-element {
+      position: absolute;
+      transition: all 1s ease-in-out;
+    }
+    
+    .triangle {
+      fill: var(--accent);
+      stroke: var(--accent-dark);
+      stroke-width: 3;
+    }
+    
+    .square {
+      fill: rgba(74, 144, 226, 0.2);
+      stroke: var(--accent);
+      stroke-width: 2;
+    }
+    
+    .formula {
+      font-size: 64px;
+      font-weight: bold;
+      color: var(--accent);
+      text-align: center;
+    }
+    
+    .label {
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    /* 开场动画 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes drawLine {
+      from { stroke-dashoffset: 1000; }
+      to { stroke-dashoffset: 0; }
+    }
+    
+    @keyframes scaleIn {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div id="animation-container">
+    <!-- 开场标题 -->
+    <div id="title" class="math-element" style="top: 200px; left: 0; right: 0; text-align: center; opacity: 0;">
+      <h1 style="font-size: 72px; margin: 0; color: var(--accent);">勾股定理</h1>
+      <h2 style="font-size: 48px; margin: 10px 0 0 0; color: var(--sub);">Pythagorean Theorem</h2>
+    </div>
+    
+    <!-- 三角形 -->
+    <svg id="triangle-svg" class="math-element" width="400" height="300" style="top: 180px; left: 440px; opacity: 0;">
+      <polygon class="triangle" points="200,50 50,250 350,250" style="stroke-dasharray: 1000; stroke-dashoffset: 1000;"/>
+    </svg>
+    
+    <!-- 边长标签 -->
+    <div id="side-a" class="math-element label" style="top: 280px; left: 180px; opacity: 0;">a</div>
+    <div id="side-b" class="math-element label" style="top: 280px; left: 620px; opacity: 0;">b</div>
+    <div id="side-c" class="math-element label" style="top: 120px; left: 420px; opacity: 0;">c</div>
+    
+    <!-- 正方形 -->
+    <svg id="square-a" class="math-element" width="200" height="200" style="top: 50px; left: 200px; opacity: 0;">
+      <rect class="square" x="10" y="10" width="180" height="180" style="stroke-dasharray: 800; stroke-dashoffset: 800;"/>
+    </svg>
+    
+    <svg id="square-b" class="math-element" width="200" height="200" style="top: 250px; left: 640px; opacity: 0;">
+      <rect class="square" x="10" y="10" width="180" height="180" style="stroke-dasharray: 800; stroke-dashoffset: 800;"/>
+    </svg>
+    
+    <svg id="square-c" class="math-element" width="300" height="300" style="top: 50px; left: 470px; opacity: 0;">
+      <rect class="square" x="10" y="10" width="280" height="280" style="stroke-dasharray: 1200; stroke-dashoffset: 1200;"/>
+    </svg>
+    
+    <!-- 公式 -->
+    <div id="formula" class="math-element formula" style="top: 500px; left: 0; right: 0; opacity: 0;">
+      a² + b² = c²
+    </div>
+    
+    <!-- 字幕区域 -->
+    <div class="subtitles">
+      <div id="sub-cn" class="line"></div>
+    </div>
+    <div class="subtitles" style="bottom: 240px;">
+      <div id="sub-en" class="line"></div>
+    </div>
+  </div>
+  <script>
+    function setSubtitles(cn, en) {
+      const cnEl = document.getElementById('sub-cn');
+      const enEl = document.getElementById('sub-en');
+      if (cnEl) cnEl.textContent = cn || '';
+      if (enEl) enEl.textContent = en || '';
+    }
+
+    function markAnimationFinished() {
+      try {
+        window.playFinished = true;
+        window.dispatchEvent(new Event('recording:finished'));
+        var flag = document.createElement('div');
+        flag.id = 'finished-flag';
+        flag.style.display = 'none';
+        document.body.appendChild(flag);
+      } catch (e) { /* no-op */ }
+    }
+
+    // 动画时间轴
+    document.addEventListener('DOMContentLoaded', function() {
+      const timeline = [
+        // 开场 (0-5秒)
+        { time: 0, action: () => setSubtitles('欢迎学习勾股定理', 'Welcome to the Pythagorean Theorem') },
+        { time: 1000, action: () => {
+          document.getElementById('title').style.animation = 'fadeIn 1.5s ease-out forwards';
+        }},
+        
+        // 介绍三角形 (5-15秒)
+        { time: 5000, action: () => setSubtitles('这是一个直角三角形', 'This is a right triangle') },
+        { time: 5000, action: () => {
+          const triangle = document.querySelector('.triangle');
+          triangle.style.animation = 'drawLine 3s ease-in-out forwards';
+          document.getElementById('triangle-svg').style.opacity = '1';
+        }},
+        
+        // 标注边长 (15-25秒)
+        { time: 15000, action: () => setSubtitles('直角三角形的三条边分别是 a, b, c', 'The three sides of the right triangle are a, b, c') },
+        { time: 15000, action: () => {
+          ['side-a', 'side-b', 'side-c'].forEach((id, index) => {
+            setTimeout(() => {
+              document.getElementById(id).style.animation = 'fadeIn 1s ease-out forwards';
+            }, index * 800);
+          });
+        }},
+        
+        // 构建正方形 (25-40秒)
+        { time: 25000, action: () => setSubtitles('以三条边为边长构建正方形', 'Construct squares using the three sides as lengths') },
+        { time: 25000, action: () => {
+          ['square-a', 'square-b', 'square-c'].forEach((id, index) => {
+            setTimeout(() => {
+              document.getElementById(id).style.opacity = '1';
+              const rect = document.querySelector(`#${id} rect`);
+              rect.style.animation = 'drawLine 2s ease-in-out forwards';
+            }, index * 1500);
+          });
+        }},
+        
+        // 揭示定理 (40-55秒)
+        { time: 40000, action: () => setSubtitles('两个小正方形的面积之和等于大正方形的面积', 'The sum of the areas of the two smaller squares equals the area of the larger square') },
+        { time: 45000, action: () => setSubtitles('这就是著名的勾股定理', 'This is the famous Pythagorean Theorem') },
+        
+        // 展示公式 (55-65秒)
+        { time: 55000, action: () => setSubtitles('用公式表示为：a² + b² = c²', 'Expressed as the formula: a² + b² = c²') },
+        { time: 55000, action: () => {
+          document.getElementById('formula').style.animation = 'fadeIn 2s ease-out forwards';
+        }},
+        
+        // 收尾 (65-75秒)
+        { time: 65000, action: () => setSubtitles('勾股定理是几何学中最重要的定理之一', 'The Pythagorean Theorem is one of the most important theorems in geometry') },
+        { time: 70000, action: () => setSubtitles('感谢观看！', 'Thank you for watching!') },
+        { time: 75000, action: () => {
+          setSubtitles('', '');
+          markAnimationFinished();
+        }}
+      ];
+
+      // 执行时间轴
+      timeline.forEach(event => {
+        setTimeout(event.action, event.time);
+      });
+    });
+  </script>
+</body>
+</html>
