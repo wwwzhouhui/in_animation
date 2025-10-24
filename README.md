@@ -1,6 +1,5 @@
 # Instructional Animation - AI Educational Animation Generator
 
-<div align="center">
 
 **AI-Powered Educational Animation Generator**
 
@@ -268,12 +267,7 @@ This project is licensed under the [MIT License](LICENSE).
 - [FFmpeg](https://ffmpeg.org/)
 - [GSAP](https://greensock.com/gsap/)
 
----
 
-<div align="center">
-**Made with ❤️ for Education**
-
-</div>
 
 ### Contact Us
 
