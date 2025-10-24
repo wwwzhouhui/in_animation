@@ -4,9 +4,9 @@
 
 **AI-Powered Educational Animation Generator**
 
-[中文](./README_CN.md) ｜ English
+[中文](./README_CN.md) | English
 
-[Project source code address](https://github.com/wwwzhouhui/in_animation)：
+[Project source code address](https://github.com/wwwzhouhui/in_animation):
 
 ---
 
@@ -78,27 +78,27 @@ docker-compose up -d
 
 Open browser: `http://localhost:8000`
 
-#### 方法 1.2：从镜像仓库拉取部署（Docker Hub）
+#### Method 1.2: Deploy from Image Registry (Docker Hub)
 
-我们提供官方镜像，便于直接从镜像仓库获取并部署：`hub.docker.com/r/wwwzhouhui569/in_animation`
+We provide an official image for easy deployment from Docker Hub: `hub.docker.com/r/wwwzhouhui569/in_animation`
 
-1. 拉取镜像
+1. Pull the image
 
 ```bash
 docker pull wwwzhouhui569/in_animation:latest
 ```
 
-2. 准备配置文件（在当前目录创建 `credentials.json`）
+2. Prepare configuration file (create `credentials.json` in the current directory)
 
 ```json
 {
-  "API_KEY": "你的API密钥",
+  "API_KEY": "your API key",
   "BASE_URL": "https://api.example.com/v1",
-  "MODEL": "你的模型名称"
+  "MODEL": "your model name"
 }
 ```
 
-3. 运行容器（将当前目录挂载到容器内）
+3. Run the container (mount the current directory into the container)
 
 ```bash
 docker run -d \
@@ -110,11 +110,11 @@ docker run -d \
   wwwzhouhui569/in_animation:latest
 ```
 
-4. 访问应用
+4. Access the application
 
-打开浏览器访问：`http://localhost:8000`
+Open the browser: `http://localhost:8000`
 
-可选：如需自定义 `ffmpeg` 路径或时区，可通过环境变量传入，例如：
+Optional: To customize the `ffmpeg` path or timezone, pass environment variables, for example:
 
 ```bash
 docker run -d \
