@@ -1,10 +1,9 @@
 # Instructional Animation - AI 教学动画生成器
 
-<div align="center">
 
-中文文档。如需英文版，请查看 `README.md`。
+中文 ｜ [English](./README.md)
 
-</div>
+[项目源码地址](https://github.com/wwwzhouhui/in_animation)：
 
 ---
 

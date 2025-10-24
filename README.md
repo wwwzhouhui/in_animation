@@ -4,9 +4,9 @@
 
 **AI-Powered Educational Animation Generator**
 
-English documentation. For Chinese, see `README_CN.md`.
+[中文](./README_CN.md) ｜ English
 
-</div>
+[Project source code address](https://github.com/wwwzhouhui/in_animation)：
 
 ---
 
