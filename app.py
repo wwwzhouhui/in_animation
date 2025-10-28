@@ -560,7 +560,7 @@ async def record_media(req: RecordRequest):
             return JSONResponse({"ok": False, "error": f"gif 生成失败: {e}"}, status_code=500)
         logger.info("[record_media] 生成 gif: %s", gif_path)
         result["gif"] = str(gif_path)
-        result["gif_url"] = f"/recordings/{gif_path.name}"
+        result["gif_url"] = f"/output/{gif_path.name}"
 
     return JSONResponse(result)
 

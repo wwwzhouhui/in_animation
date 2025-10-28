@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         openInNewWindow: { zh: "在新窗口中打开", en: "Open in new window" },
         saveAsHTML: { zh: "保存为 HTML", en: "Save as HTML" },
         exportAsVideo: { zh: "导出为视频", en: "Export as Video" },
+        exportAsGif: { zh: "导出为 GIF", en: "Export as GIF" },
         featureComingSoon: { zh: "该功能正在开发中，将在不久的将来推出。\n 请关注我们的官方 GitHub 仓库以获取最新动态！", en: "This feature is under development and will be available soon.\n Follow our official GitHub repository for the latest updates!" },
         visitGitHub: { zh: "访问 GitHub", en: "Visit GitHub" },
         errorMessage: { zh: "抱歉，服务出现了一点问题。请稍后重试。", en: "Sorry, something went wrong. Please try again later." },
@@ -326,6 +327,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const htmlText = iframe?.srcdoc || htmlContent || '';
+
+                // 验证 HTML 是否完整（检查是否有 </html> 闭合标签）
+                if (!htmlText.includes('</html>')) {
+                    console.warn('警告: 生成的 HTML 代码不完整，可能导致录制问题');
+                }
+
+                // 检查是否包含 markAnimationFinished 调用
+                const hasFinishCall = /markAnimationFinished\s*\(\s*\)/.test(htmlText) &&
+                                     htmlText.split('markAnimationFinished').length > 2; // 至少2次出现（定义+调用）
+
                 const resp = await fetch('/record', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -337,7 +348,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         wait_until: 'networkidle',
                         timeout: 180000,
                         end_event: 'recording:finished',
-                        end_timeout: 180000,
+                        // 如果没有完成标记，使用较短的超时时间（60秒）
+                        end_timeout: hasFinishCall ? 180000 : 60000,
                         mp4: true,
                         headless: true,
                     })
@@ -396,6 +408,120 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) {
                 console.error('导出视频失败:', e);
                 showWarning((e && e.message) || '导出视频失败');
+            } finally {
+                clearInterval(timerId);
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.remove('disabled');
+                    btn.querySelector('span').textContent = originalText;
+                    progressBar.remove();
+                }, 1500);
+            }
+        });
+        playerElement.querySelector('.export-gif')?.addEventListener('click', async (ev) => {
+            const btn = ev.currentTarget;
+            let timerId = null;
+            let elapsed = 0;
+            const originalText = btn.querySelector('span')?.textContent || '导出为 GIF';
+            const progressBar = document.createElement('div');
+            progressBar.style.cssText = 'position:absolute;left:0;bottom:0;height:3px;width:0;background:#4a90e2;transition:width 0.3s;';
+            btn.disabled = true;
+            btn.classList.add('disabled');
+            btn.style.position = 'relative';
+            btn.querySelector('span').textContent = '处理中... 0s';
+            btn.appendChild(progressBar);
+
+            const tick = () => {
+                elapsed += 1;
+                btn.querySelector('span').textContent = `处理中... ${elapsed}s`;
+                const pct = Math.min(95, Math.floor((elapsed / 30) * 95));
+                progressBar.style.width = pct + '%';
+            };
+            timerId = setInterval(tick, 1000);
+
+            try {
+                const htmlText = iframe?.srcdoc || htmlContent || '';
+
+                // 验证 HTML 是否完整
+                if (!htmlText.includes('</html>')) {
+                    console.warn('警告: 生成的 HTML 代码不完整，可能导致录制问题');
+                }
+
+                // 检查是否包含 markAnimationFinished 调用
+                const hasFinishCall = /markAnimationFinished\s*\(\s*\)/.test(htmlText) &&
+                                     htmlText.split('markAnimationFinished').length > 2;
+
+                const resp = await fetch('/record', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        html_text: htmlText,
+                        width: 1280,
+                        height: 720,
+                        fps: 24,
+                        wait_until: 'networkidle',
+                        timeout: 180000,
+                        end_event: 'recording:finished',
+                        // 如果没有完成标记，使用较短的超时时间（60秒）
+                        end_timeout: hasFinishCall ? 180000 : 60000,
+                        gif: true,
+                        gif_fps: 10,
+                        gif_width: 800,
+                        headless: true,
+                    })
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.error || `HTTP ${resp.status}`);
+                }
+                const data = await resp.json();
+                const gifUrl = data.gif_url || '';
+                if (!gifUrl) {
+                    throw new Error('未获取到 GIF 下载地址，请检查服务端 FFmpeg 是否已安装并成功转码。');
+                }
+                const cacheBustedGifUrl = `${gifUrl}?t=${Date.now()}`;
+                progressBar.style.width = '100%';
+                btn.querySelector('span').textContent = '完成，开始下载';
+                const a = document.createElement('a');
+                a.href = cacheBustedGifUrl;
+                try {
+                    const u = new URL(gifUrl, window.location.origin);
+                    const name = u.pathname.split('/').pop() || 'animation.gif';
+                    a.download = name;
+                } catch (_) {
+                    a.download = 'animation.gif';
+                }
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                // 展示 GIF 预览
+                if (gifUrl) {
+                    const container = playerElement.querySelector('.player-container');
+                    let preview = playerElement.querySelector('.exported-gif-preview');
+                    if (!preview) {
+                        preview = document.createElement('div');
+                        preview.className = 'exported-gif-preview';
+                        preview.style.cssText = 'margin-top:12px;padding:12px;border-radius:12px;background:#f7f9fc;border:1px solid #e6edf5;';
+                        const title = document.createElement('div');
+                        title.textContent = '导出 GIF 预览';
+                        title.style.cssText = 'font-size:14px;color:#445;opacity:0.9;margin-bottom:8px;';
+                        const img = document.createElement('img');
+                        img.style.width = '100%';
+                        img.style.maxHeight = '480px';
+                        img.style.borderRadius = '8px';
+                        img.src = cacheBustedGifUrl;
+                        preview.appendChild(title);
+                        preview.appendChild(img);
+                        container.appendChild(preview);
+                    } else {
+                        const img = preview.querySelector('img');
+                        if (img) img.src = cacheBustedGifUrl;
+                    }
+                }
+            } catch (e) {
+                console.error('导出 GIF 失败:', e);
+                showWarning((e && e.message) || '导出 GIF 失败');
             } finally {
                 clearInterval(timerId);
                 setTimeout(() => {

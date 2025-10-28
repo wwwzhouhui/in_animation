@@ -162,10 +162,17 @@ async def load_page_and_record(
             await page.wait_for_function(end_function, timeout=used_timeout)
         elif end_event:
             # 在页面内注入等待自定义事件的 Promise（以单一参数对象传入）
-            await page.evaluate(
-                "({name, timeout}) => new Promise((resolve, reject) => { const t = setTimeout(() => reject('timeout'), timeout); window.addEventListener(name, () => { clearTimeout(t); resolve(true); }, { once: true }); })",
-                {"name": end_event, "timeout": used_timeout},
-            )
+            # 添加 try-except 捕获超时，即使没有事件也能完成录制
+            try:
+                await page.evaluate(
+                    "({name, timeout}) => new Promise((resolve, reject) => { const t = setTimeout(() => reject('timeout'), timeout); window.addEventListener(name, () => { clearTimeout(t); resolve(true); }, { once: true }); })",
+                    {"name": end_event, "timeout": used_timeout},
+                )
+            except Exception as e:
+                # 如果等待事件超时，记录警告但继续完成录制
+                print(f"警告: 等待事件 '{end_event}' 超时 ({used_timeout}ms)，继续完成录制", file=sys.stderr)
+                # 等待一小段时间确保动画完成
+                await asyncio.sleep(5)
         else:
             if duration > 0:
                 await asyncio.sleep(duration)
