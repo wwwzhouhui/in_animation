@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Instructional Animation - AI驱动的教育动画生成器，自动创建精美的教学动画">
+    <title>Instructional Animation - AI教育动画生成器</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #667eea;
+            --accent: #f093fb;
+            --dark: #1a202c;
+            --light: #f7fafc;
+            --text: #2d3748;
+            --text-light: #718096;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                         'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--light);
+            overflow-x: hidden;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-sm);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+            padding-top: 80px;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .hero-content {
+            text-align: center;
+            color: white;
+            z-index: 1;
+            max-width: 900px;
+            padding: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.4s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.6s both;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        /* Section通用样式 */
+        section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 4rem;
+        }
+
+        /* 特性网格 */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow);
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .feature-description {
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+
+        /* 技术栈 */
+        .tech-stack {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .tech-item {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+        }
+
+        .tech-item:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow);
+        }
+
+        .tech-category {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        /* 架构图 */
+        .architecture {
+            background: white;
+        }
+
+        .arch-diagram {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem;
+            border-radius: 20px;
+            color: white;
+            margin-top: 3rem;
+        }
+
+        .arch-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .arch-layer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .arch-layer-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .arch-components {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .arch-component {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* 使用流程 */
+        .workflow {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            text-align: center;
+            color: var(--dark);
+        }
+
+        .step-description {
+            color: var(--text-light);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* 快速开始 */
+        .quick-start {
+            background: white;
+        }
+
+        .installation-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-button {
+            padding: 0.75rem 2rem;
+            background: var(--light);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 1.5rem 0;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .copy-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .footer-links a:hover {
+            transform: scale(1.2);
+            color: var(--accent);
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        /* 动画 */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 高亮文本 */
+        .highlight {
+            background: linear-gradient(180deg, transparent 60%, #ffd700 60%);
+            padding: 0 0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🎬 Instructional Animation</div>
+            <ul class="nav-links">
+                <li><a href="#features">功能特性</a></li>
+                <li><a href="#tech">技术栈</a></li>
+                <li><a href="#architecture">架构</a></li>
+                <li><a href="#workflow">使用流程</a></li>
+                <li><a href="#quick-start">快速开始</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero区域 -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>🎬 AI 驱动的教育动画生成器</h1>
+            <p class="hero-subtitle">让教学动画创作变得简单而智能</p>
+            <p class="hero-description">
+                Instructional Animation 是一款强大的教育动画生成工具，通过AI技术自动生成精美的HTML5动画。
+                只需输入教学主题，系统即可生成<span class="highlight">2K高清动画</span>，并支持导出为MP4视频和GIF格式。
+                完美适用于在线教育、课程制作、知识分享等场景。
+            </p>
+            <div class="cta-buttons">
+                <a href="#quick-start" class="btn btn-primary">🚀 立即开始</a>
+                <a href="https://github.com/wwwzhouhui/in_animation" class="btn btn-secondary" target="_blank">
+                    📦 GitHub 仓库
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心功能 -->
+    <section id="features">
+        <h2 class="section-title">✨ 核心功能</h2>
+        <p class="section-subtitle">强大而完整的教育动画解决方案</p>
+        <div class="features-grid">
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">🤖</div>
+                <h3 class="feature-title">AI智能生成</h3>
+                <p class="feature-description">
+                    支持OpenAI和Anthropic Claude双接口，自动识别并使用最佳模型生成教学动画代码，
+                    确保动画质量和教学效果。
+                </p>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">🎨</div>
+                <h3 class="feature-title">视觉精美</h3>
+                <p class="feature-description">
+                    2K分辨率（1280×720）输出，浅色主题设计，专业级视觉效果，
+                    确保每一帧都清晰美观。
+                </p>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">🌐</div>
+                <h3 class="feature-title">双语支持</h3>
+                <p class="feature-description">
+                    完整的中英文界面和字幕系统，适合不同语言环境的教学需求，
+                    拓展国际化应用场景。
+                </p>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">🎬</div>
+                <h3 class="feature-title">一键导出</h3>
+                <p class="feature-description">
+                    支持导出HTML、MP4视频和GIF格式，满足不同平台和使用场景的需求，
+                    轻松集成到各类教学系统。
+                </p>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">流式生成</h3>
+                <p class="feature-description">
+                    实时SSE流式输出，即时查看生成进度，提供流畅的用户体验，
+                    无需等待完整内容生成。
+                </p>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">🔄</div>
+                <h3 class="feature-title">迭代优化</h3>
+                <p class="feature-description">
+                    支持多轮对话优化，根据反馈不断调整和改进动画效果，
+                    直到达到最佳教学效果。
+                </p>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">🐳</div>
+                <h3 class="feature-title">容器化部署</h3>
+                <p class="feature-description">
+                    完整的Docker和Docker Compose支持，一键部署，
+                    支持从Docker Hub直接拉取镜像，简化部署流程。
+                </p>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">📹</div>
+                <h3 class="feature-title">自动录制</h3>
+                <p class="feature-description">
+                    集成Playwright浏览器自动化，自动录制动画播放过程，
+                    通过FFmpeg高质量转码为通用视频格式。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术栈 -->
+    <section id="tech" class="tech-stack">
+        <h2 class="section-title">🛠️ 技术栈</h2>
+        <p class="section-subtitle">基于现代化技术构建的可靠系统</p>
+        <div class="tech-grid">
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">Web框架</div>
+                <div class="tech-name">FastAPI</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">AI接口</div>
+                <div class="tech-name">OpenAI / Claude</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">浏览器自动化</div>
+                <div class="tech-name">Playwright</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">视频转码</div>
+                <div class="tech-name">FFmpeg</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">编程语言</div>
+                <div class="tech-name">Python 3.11+</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">前端技术</div>
+                <div class="tech-name">HTML5/CSS3/JS</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">动画库</div>
+                <div class="tech-name">GSAP</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">模板引擎</div>
+                <div class="tech-name">Jinja2</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">容器化</div>
+                <div class="tech-name">Docker</div>
+            </div>
+            <div class="tech-item animate-on-scroll">
+                <div class="tech-category">HTTP客户端</div>
+                <div class="tech-name">HTTPX</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 系统架构 -->
+    <section id="architecture" class="architecture">
+        <h2 class="section-title">🏗️ 系统架构</h2>
+        <p class="section-subtitle">清晰的分层架构设计，确保系统可维护性和扩展性</p>
+        <div class="arch-diagram animate-on-scroll">
+            <div class="arch-layers">
+                <div class="arch-layer">
+                    <div class="arch-layer-title">
+                        🎨 前端层
+                    </div>
+                    <div class="arch-components">
+                        <span class="arch-component">响应式Web界面</span>
+                        <span class="arch-component">实时预览系统</span>
+                        <span class="arch-component">SSE流式接收</span>
+                        <span class="arch-component">导出管理</span>
+                    </div>
+                </div>
+
+                <div class="arch-layer">
+                    <div class="arch-layer-title">
+                        ⚙️ API服务层
+                    </div>
+                    <div class="arch-components">
+                        <span class="arch-component">FastAPI框架</span>
+                        <span class="arch-component">RESTful API</span>
+                        <span class="arch-component">CORS中间件</span>
+                        <span class="arch-component">请求验证</span>
+                        <span class="arch-component">错误处理</span>
+                    </div>
+                </div>
+
+                <div class="arch-layer">
+                    <div class="arch-layer-title">
+                        🧠 AI生成引擎
+                    </div>
+                    <div class="arch-components">
+                        <span class="arch-component">OpenAI Client</span>
+                        <span class="arch-component">Anthropic Client</span>
+                        <span class="arch-component">接口自动识别</span>
+                        <span class="arch-component">流式响应处理</span>
+                        <span class="arch-component">Prompt工程</span>
+                    </div>
+                </div>
+
+                <div class="arch-layer">
+                    <div class="arch-layer-title">
+                        🎬 录制与转码层
+                    </div>
+                    <div class="arch-components">
+                        <span class="arch-component">Playwright录制</span>
+                        <span class="arch-component">浏览器自动化</span>
+                        <span class="arch-component">FFmpeg转码</span>
+                        <span class="arch-component">格式转换(MP4/GIF)</span>
+                        <span class="arch-component">文件管理</span>
+                    </div>
+                </div>
+
+                <div class="arch-layer">
+                    <div class="arch-layer-title">
+                        💾 存储层
+                    </div>
+                    <div class="arch-components">
+                        <span class="arch-component">HTML生成文件</span>
+                        <span class="arch-component">录制视频</span>
+                        <span class="arch-component">导出结果</span>
+                        <span class="arch-component">日志文件</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 使用流程 -->
+    <section id="workflow" class="workflow">
+        <h2 class="section-title">📋 使用流程</h2>
+        <p class="section-subtitle">简单四步，创建精美教学动画</p>
+        <div class="steps">
+            <div class="step animate-on-scroll">
+                <div class="step-number">1</div>
+                <h3 class="step-title">输入主题</h3>
+                <p class="step-description">
+                    在输入框中描述您的教学主题，例如"勾股定理"、"光的折射"等，
+                    系统支持各类学科知识点。
+                </p>
+            </div>
+
+            <div class="step animate-on-scroll">
+                <div class="step-number">2</div>
+                <h3 class="step-title">AI生成</h3>
+                <p class="step-description">
+                    系统自动调用AI模型，生成符合2K分辨率标准的HTML5动画代码，
+                    实时显示生成进度。
+                </p>
+            </div>
+
+            <div class="step animate-on-scroll">
+                <div class="step-number">3</div>
+                <h3 class="step-title">预览优化</h3>
+                <p class="step-description">
+                    在浏览器中预览生成的动画，通过对话方式提出修改建议，
+                    系统将迭代优化直到满意。
+                </p>
+            </div>
+
+            <div class="step animate-on-scroll">
+                <div class="step-number">4</div>
+                <h3 class="step-title">导出使用</h3>
+                <p class="step-description">
+                    选择导出格式（HTML/MP4/GIF），一键下载，
+                    即可在各类教学场景中使用。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 快速开始 -->
+    <section id="quick-start" class="quick-start">
+        <h2 class="section-title">🚀 快速开始</h2>
+        <p class="section-subtitle">选择适合您的部署方式</p>
+
+        <div class="installation-tabs">
+            <button class="tab-button active" onclick="switchTab('docker')">Docker 部署</button>
+            <button class="tab-button" onclick="switchTab('local')">本地开发</button>
+        </div>
+
+        <div id="docker-content" class="tab-content">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--dark);">🐳 Docker 快速部署（推荐）</h3>
+
+            <h4 style="margin-top: 2rem; color: var(--text);">1. 配置 API Key</h4>
+            <p style="color: var(--text-light); margin-bottom: 1rem;">创建 <code>credentials.json</code> 文件：</p>
+            <div class="code-block">
+                <button class="copy-button" onclick="copyCode(this)">复制</button>
+                <code>{
+  "API_KEY": "your-api-key-here",
+  "BASE_URL": "https://api.example.com/v1",
+  "MODEL": "your-model-name"
+}</code>
+            </div>
+
+            <h4 style="margin-top: 2rem; color: var(--text);">2. 启动服务</h4>
+            <div class="code-block">
+                <button class="copy-button" onclick="copyCode(this)">复制</button>
+                <code>docker-compose up -d</code>
+            </div>
+
+            <h4 style="margin-top: 2rem; color: var(--text);">3. 访问应用</h4>
+            <p style="color: var(--text-light);">在浏览器中打开：<a href="http://localhost:8000" style="color: var(--primary);">http://localhost:8000</a></p>
+
+            <h4 style="margin-top: 3rem; color: var(--text);">或从 Docker Hub 部署</h4>
+            <div class="code-block">
+                <button class="copy-button" onclick="copyCode(this)">复制</button>
+                <code>docker pull wwwzhouhui569/in_animation:latest
+
+docker run -d \
+  --name in_animation \
+  -p 8000:8000 \
+  -v $(pwd)/credentials.json:/app/credentials.json:ro \
+  -v $(pwd)/output:/app/output \
+  -e TZ=Asia/Shanghai \
+  wwwzhouhui569/in_animation:latest</code>
+            </div>
+        </div>
+
+        <div id="local-content" class="tab-content" style="display: none;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--dark);">💻 本地开发部署</h3>
+
+            <h4 style="margin-top: 2rem; color: var(--text);">1. 克隆仓库</h4>
+            <div class="code-block">
+                <button class="copy-button" onclick="copyCode(this)">复制</button>
+                <code>git clone https://github.com/wwwzhouhui/in_animation.git
+cd in_animation</code>
+            </div>
+
+            <h4 style="margin-top: 2rem; color: var(--text);">2. 创建虚拟环境</h4>
+            <div class="code-block">
+                <button class="copy-button" onclick="copyCode(this)">复制</button>
+                <code>python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# 或 venv\Scripts\activate  # Windows</code>
+            </div>
+
+            <h4 style="margin-top: 2rem; color: var(--text);">3. 安装依赖</h4>
+            <div class="code-block">
+                <button class="copy-button" onclick="copyCode(this)">复制</button>
+                <code>pip install -r requirements.txt
+playwright install chromium
+playwright install-deps chromium</code>
+            </div>
+
+            <h4 style="margin-top: 2rem; color: var(--text);">4. 安装 FFmpeg</h4>
+            <div class="code-block">
+                <button class="copy-button" onclick="copyCode(this)">复制</button>
+                <code># Ubuntu/Debian
+sudo apt install ffmpeg
+
+# macOS
+brew install ffmpeg
+
+# Windows - 下载并添加到 PATH</code>
+            </div>
+
+            <h4 style="margin-top: 2rem; color: var(--text);">5. 配置并启动</h4>
+            <div class="code-block">
+                <button class="copy-button" onclick="copyCode(this)">复制</button>
+                <code># 配置 credentials.json (同上)
+
+# 启动服务
+python app.py
+# 或
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload</code>
+            </div>
+        </div>
+
+        <div style="margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white; text-align: center;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">🎯 应用场景</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
+                    <div style="font-weight: 600;">在线教育</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">创建互动教学内容</div>
+                </div>
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎓</div>
+                    <div style="font-weight: 600;">课程制作</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">快速生成课程素材</div>
+                </div>
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">💡</div>
+                    <div style="font-weight: 600;">知识分享</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">制作科普视频内容</div>
+                </div>
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                    <div style="font-weight: 600;">演示文稿</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">生成动态PPT效果</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="https://github.com/wwwzhouhui/in_animation" target="_blank" title="GitHub">
+                    <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                </a>
+                <a href="mailto:75271002@qq.com" title="Email">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+            </div>
+            <p class="footer-text">
+                © 2024 Instructional Animation | 基于 MIT License 开源 | 作者：周辉
+            </p>
+            <p class="footer-text" style="margin-top: 1rem;">
+                如果这个项目对您有帮助，请在 GitHub 上给个 ⭐ Star！
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // 标签切换
+        function switchTab(tab) {
+            const buttons = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.tab-content');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            contents.forEach(content => content.style.display = 'none');
+
+            event.target.classList.add('active');
+            document.getElementById(tab + '-content').style.display = 'block';
+        }
+
+        // 复制代码
+        function copyCode(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.querySelector('code').textContent;
+
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '已复制！';
+                button.style.background = 'rgba(72, 187, 120, 0.3)';
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = 'rgba(255, 255, 255, 0.1)';
+                }, 2000);
+            });
+        }
+
+        // 滚动动画
+        function handleScroll() {
+            const elements = document.querySelectorAll('.animate-on-scroll');
+
+            elements.forEach(element => {
+                const rect = element.getBoundingClientRect();
+                const isVisible = rect.top < window.innerHeight - 100;
+
+                if (isVisible) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 导航栏滚动效果
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 100) {
+                navbar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+            } else {
+                navbar.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.08)';
+            }
+
+            handleScroll();
+            lastScroll = currentScroll;
+        });
+
+        // 初始化
+        window.addEventListener('load', handleScroll);
+        window.addEventListener('scroll', handleScroll);
+    </script>
+</body>
+</html>

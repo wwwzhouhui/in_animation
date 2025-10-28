@@ -215,3 +215,22 @@ __MACOSX/
 **/Thumbs.db
 **/ehthumbs.db
 credentials.json
+
+# Application logs and outputs
+logs/
+.recordings/
+.generated_html/
+output/
+.claude/settings.local.json
+test/anyrouter/.claude/settings.local.json
+test/config.yaml
+test/litellm_service.sh
+test/README.md
+test/test_dify_validation.py
+test/test_litellm_auth.py
+test/test_models.py
+test/testAnthropicClient.py
+test/testGPT5.py
+test/.claude/settings.local.json
+test/anyrouter/config2.yaml
+test/anyrouter/config3.yaml

@@ -13,6 +13,14 @@
 
 Instructional Animation is an AI-powered educational animation generator that automatically creates visually stunning and interactive HTML5 animations based on educational topics. It supports exporting to MP4 videos and GIF formats.
 
+### 🎬 Video Demo
+
+Watch a quick demonstration of the animation generator in action:
+
+[📺 View Demo Video](./examples/演示.mp4)
+
+> **Note**: Click the link above to download and view the demo video, or view it directly in the `examples/演示.mp4` file.
+
 ### ✨ Key Features
 
 - **🤖 AI-Powered**: Automatically generates educational animations using large language models

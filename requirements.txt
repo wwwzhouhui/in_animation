@@ -5,6 +5,7 @@ openai
 jinja2
 pytz
 requests
+httpx
 playwright
 pyyaml
 imageio-ffmpeg

@@ -17,6 +17,9 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
+# 导入 Anthropic 客户端
+from AnthropicClient import AnthropicClient, anthropic_stream_to_sse
+
 # 录制与转码工具（Playwright + FFmpeg）
 try:
     from scripts.record_media import load_page_and_record, run_ffmpeg, which
@@ -29,21 +32,79 @@ except Exception:
 # 0. 配置
 # -----------------------------------------------------------------------
 shanghai_tz = pytz.timezone("Asia/Shanghai")
-logger = logging.getLogger("ai_animation")
+
+# 配置日志系统
+def setup_logger():
+    """配置日志输出到控制台和文件"""
+    logger = logging.getLogger("ai_animation")
+    logger.setLevel(logging.INFO)
+
+    # 避免重复添加处理器
+    if logger.handlers:
+        return logger
+
+    # 日志格式
+    log_format = logging.Formatter(
+        fmt='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    # 控制台处理器
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(log_format)
+    logger.addHandler(console_handler)
+
+    # 创建日志目录
+    log_dir = Path("logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    # 文件处理器 - 按日期命名
+    log_file = log_dir / f"app_{datetime.now(shanghai_tz).strftime('%Y%m%d')}.log"
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(log_format)
+    logger.addHandler(file_handler)
+
+    logger.info("=" * 60)
+    logger.info("日志系统初始化完成")
+    logger.info(f"日志文件: {log_file}")
+    logger.info("=" * 60)
+
+    return logger
+
+logger = setup_logger()
 
 credentials = json.load(open("credentials.json"))
 API_KEY = credentials["API_KEY"]
 BASE_URL = credentials.get("BASE_URL", "")
 MODEL = credentials.get("MODEL", "ZhipuAI/GLM-4.6")
 
-# 初始化 OpenAI 客户端（兼容 ModelScope API）
-client = AsyncOpenAI(
-    api_key=API_KEY,
-    base_url=BASE_URL
-)
-
 if not API_KEY or API_KEY == "sk-REPLACE_ME":
     raise RuntimeError("请在 credentials.json 里配置正确的 API_KEY")
+
+# 判断使用哪种接口：根据模型名称自动识别
+def is_anthropic_model(model_name: str) -> bool:
+    """判断是否是 Anthropic Claude 模型"""
+    return "claude" in model_name.lower()
+
+# 初始化客户端
+if is_anthropic_model(MODEL):
+    # 使用 Anthropic 客户端
+    anthropic_client = AnthropicClient(
+        api_key=API_KEY,
+        base_url=BASE_URL if BASE_URL else "https://api.anthropic.com"
+    )
+    openai_client = None
+    logger.info(f"使用 Anthropic 接口，模型: {MODEL}")
+else:
+    # 使用 OpenAI 兼容客户端
+    openai_client = AsyncOpenAI(
+        api_key=API_KEY,
+        base_url=BASE_URL
+    )
+    anthropic_client = None
+    logger.info(f"使用 OpenAI 兼容接口，模型: {MODEL}")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -52,20 +113,44 @@ templates = Jinja2Templates(directory="templates")
 # -----------------------------------------------------------------------
 app = FastAPI(title="Instructional Animation Backend", version="1.0.0")
 
+# 应用启动事件
+@app.on_event("startup")
+async def startup_event():
+    logger.info("=" * 60)
+    logger.info("应用启动中...")
+    logger.info(f"FastAPI 版本: {FastAPI.__version__ if hasattr(FastAPI, '__version__') else 'unknown'}")
+    logger.info(f"配置的模型: {MODEL}")
+    logger.info(f"API Base URL: {BASE_URL if BASE_URL else '默认'}")
+    logger.info("=" * 60)
+
+# 应用关闭事件
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("=" * 60)
+    logger.info("应用正在关闭...")
+    logger.info("=" * 60)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],
 )
+
+logger.info("CORS 中间件已配置")
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 # 挂载录制输出目录，便于前端直接下载
 try:
     Path(".recordings").mkdir(parents=True, exist_ok=True)
     app.mount("/recordings", StaticFiles(directory=".recordings"), name="recordings")
+    logger.info("挂载录制目录: .recordings")
+
     Path("output").mkdir(parents=True, exist_ok=True)
     app.mount("/output", StaticFiles(directory="output"), name="output")
-except Exception:
+    logger.info("挂载输出目录: output")
+except Exception as e:
+    logger.warning(f"挂载静态目录失败: {str(e)}")
     pass
 
 class ChatRequest(BaseModel):
@@ -100,7 +185,7 @@ class RecordRequest(BaseModel):
     end_timeout: Optional[int] = None
 
 # -----------------------------------------------------------------------
-# 2. 核心：流式生成器 (现在会使用 history)
+# 2. 核心：流式生成器 (现在会使用 history，支持双接口)
 # -----------------------------------------------------------------------
 async def llm_event_stream(
     topic: str,
@@ -108,7 +193,8 @@ async def llm_event_stream(
     model: str = None,
 ) -> AsyncGenerator[str, None]:
     """
-    使用 OpenAI 兼容接口（ModelScope）生成流式响应
+    使用 OpenAI 或 Anthropic 接口生成流式响应
+    根据模型名称自动选择接口
     """
     history = history or []
 
@@ -251,26 +337,50 @@ async def llm_event_stream(
         {"role": "user", "content": topic},
     ]
 
-    try:
-        response = await client.chat.completions.create(
-            model=model,
-            messages=messages,
-            stream=True,
-            temperature=0.8,
-        )
-    except OpenAIError as e:
-        yield f"data: {json.dumps({'error': str(e)})}\n\n"
-        return
+    # 根据模型类型选择接口
+    if is_anthropic_model(model):
+        # 使用 Anthropic 接口
+        logger.info(f"使用 Anthropic 接口生成内容，模型: {model}")
+        logger.info(f"主题: {topic[:100]}...")  # 只记录前100个字符
+        try:
+            async for sse_chunk in anthropic_stream_to_sse(
+                client=anthropic_client,
+                model=model,
+                messages=messages,
+                temperature=0.8,
+                max_tokens=4096,
+            ):
+                yield sse_chunk
+            logger.info("Anthropic 接口流式响应完成")
+        except Exception as e:
+            logger.error(f"Anthropic 接口调用失败: {str(e)}", exc_info=True)
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    else:
+        # 使用 OpenAI 兼容接口
+        logger.info(f"使用 OpenAI 兼容接口生成内容，模型: {model}")
+        logger.info(f"主题: {topic[:100]}...")  # 只记录前100个字符
+        try:
+            response = await openai_client.chat.completions.create(
+                model=model,
+                messages=messages,
+                stream=True,
+                temperature=0.8,
+            )
+        except OpenAIError as e:
+            logger.error(f"OpenAI 接口调用失败: {str(e)}", exc_info=True)
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            return
 
-    # 流式输出
-    async for chunk in response:
-        token = chunk.choices[0].delta.content or ""
-        if token:
-            payload = json.dumps({"token": token}, ensure_ascii=False)
-            yield f"data: {payload}\n\n"
-            await asyncio.sleep(0.001)
+        # 流式输出
+        async for chunk in response:
+            token = chunk.choices[0].delta.content or ""
+            if token:
+                payload = json.dumps({"token": token}, ensure_ascii=False)
+                yield f"data: {payload}\n\n"
+                await asyncio.sleep(0.001)
 
-    yield 'data: {"event":"[DONE]"}\n\n'
+        logger.info("OpenAI 接口流式响应完成")
+        yield 'data: {"event":"[DONE]"}\n\n'
 
 # -----------------------------------------------------------------------
 # 3. 路由 (CHANGED: Now a POST request)
@@ -285,6 +395,11 @@ async def generate(
     Accepts a JSON body with "topic" and optional "history".
     Returns an SSE stream.
     """
+    client_host = request.client.host if request.client else "unknown"
+    logger.info(f"收到生成请求 - 来自: {client_host}")
+    logger.info(f"主题长度: {len(chat_request.topic)} 字符")
+    logger.info(f"历史消息数: {len(chat_request.history) if chat_request.history else 0}")
+
     accumulated_response = ""  # for caching flow results
 
     async def event_generator():
@@ -293,15 +408,18 @@ async def generate(
             async for chunk in llm_event_stream(chat_request.topic, chat_request.history):
                 accumulated_response += chunk
                 if await request.is_disconnected():
+                    logger.warning(f"客户端 {client_host} 断开连接")
                     break
                 yield chunk
         except Exception as e:
+            logger.error(f"事件生成器错误: {str(e)}", exc_info=True)
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
 
     async def wrapped_stream():
         async for chunk in event_generator():
             yield chunk
+        logger.info(f"请求完成 - 来自: {client_host}")
 
     headers = {
         "Cache-Control": "no-store",
