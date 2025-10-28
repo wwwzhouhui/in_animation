@@ -17,9 +17,21 @@ Instructional Animation is an AI-powered educational animation generator that au
 
 Watch a quick demonstration of the animation generator in action:
 
-[📺 View Demo Video](./examples/演示.mp4)
+<div align="center">
+<video src="https://github.com/wwwzhouhui/in_animation/raw/main/examples/演示.mp4" controls="controls" width="100%" style="max-width: 800px;">
+  Your browser does not support the video tag.
+</video>
 
-> **Note**: Click the link above to download and view the demo video, or view it directly in the `examples/演示.mp4` file.
+**GIF Preview**
+
+![Demo Animation](./examples/demo.gif)
+
+</div>
+
+> 💡 **Viewing Tips**:
+> - Click the video above to play directly on GitHub
+> - Or download the [MP4 file](./examples/演示.mp4) for offline viewing
+> - GIF preview loads automatically but may have lower quality
 
 ### ✨ Key Features
 

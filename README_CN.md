@@ -15,9 +15,21 @@ Instructional Animation 是一个基于大语言模型的教学动画生成工�
 
 观看动画生成器的快速演示：
 
-[📺 查看演示视频](./examples/演示.mp4)
+<div align="center">
+<video src="https://github.com/wwwzhouhui/in_animation/raw/main/examples/演示.mp4" controls="controls" width="100%" style="max-width: 800px;">
+  您的浏览器不支持视频播放。
+</video>
 
-> **提示**：点击上方链接下载并查看演示视频，或直接访问 `examples/演示.mp4` 文件。
+**GIF 预览**
+
+![演示动画](./examples/demo.gif)
+
+</div>
+
+> 💡 **观看提示**：
+> - 点击上方视频即可在 GitHub 上直接播放
+> - 或下载 [MP4 文件](./examples/演示.mp4) 离线观看
+> - GIF 预览会自动加载，但画质较低
 
 ### ✨ 核心特性
 
