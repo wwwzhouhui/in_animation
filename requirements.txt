@@ -9,3 +9,4 @@ httpx
 playwright
 pyyaml
 imageio-ffmpeg
+python-dotenv

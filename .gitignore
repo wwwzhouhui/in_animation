@@ -1,12 +1,11 @@
-# Byte-compiled / optimized / DLL files
+# 环境配置文件
+.env
+
+# 依赖目录
 __pycache__/
-*.py[codz]
+*.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -20,209 +19,150 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py.cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#uv.lock
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-#poetry.toml
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#   pdm recommends including project-wide configuration in pdm.toml, but excluding .pdm-python.
-#   https://pdm-project.org/en/latest/usage/project/#working-with-version-control
-#pdm.lock
-#pdm.toml
-.pdm-python
-.pdm-build/
-
-# pixi
-#   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
-#pixi.lock
-#   Pixi creates a virtual environment in the .pixi directory, just like venv module creates one
-#   in the .venv directory. It is recommended not to include this directory in version control.
-.pixi
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.envrc
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
-
-# Abstra
-# Abstra is an AI-powered process automation framework.
-# Ignore directories containing user credentials, local state, and settings.
-# Learn more at https://abstra.io/docs
-.abstra/
-
-# Visual Studio Code
-#  Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
-#  that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#  and can be added to the global gitignore or merged into this file. However, if you prefer, 
-#  you could uncomment the following to ignore the entire vscode folder
-# .vscode/
-
-# Ruff stuff:
-.ruff_cache/
-
-# PyPI configuration file
-.pypirc
-
-# Cursor
-#  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
-#  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
-#  refer to https://docs.cursor.com/context/ignore-files
-.cursorignore
-.cursorindexingignore
-
-# Marimo
-marimo/_static/
-marimo/_lsp/
-__marimo__/
-
-# Streamlit
-.streamlit/secrets.toml
-
-# custome
-__MACOSX/
-**/.DS_Store
-**/Thumbs.db
-**/ehthumbs.db
-credentials.json
-
-# Application logs and outputs
+# 日志文件
 logs/
+*.log
+
+# 录制文件
 .recordings/
+.output/
 .generated_html/
-output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
 .claude/settings.local.json
-test/anyrouter/.claude/settings.local.json
+.claude/commands/openspec/apply.md
+.claude/commands/openspec/archive.md
+.claude/commands/openspec/proposal.md
+.ipynb_checkpoints/11-checkpoint.html
+.ipynb_checkpoints/11-checkpoint.md
+.ipynb_checkpoints/AGENTS-checkpoint.md
+.ipynb_checkpoints/AnthropicClient-checkpoint.py
+.ipynb_checkpoints/app-checkpoint.py
+.ipynb_checkpoints/CHANGES-checkpoint.md
+.ipynb_checkpoints/CLAUDE-checkpoint.md
+.ipynb_checkpoints/config-checkpoint.yaml
+.ipynb_checkpoints/credentials-anthropic-checkpoint.json
+.ipynb_checkpoints/credentials-checkpoint.json
+.ipynb_checkpoints/credentials20251022-checkpoint.json
+.ipynb_checkpoints/credentials20251024-checkpoint.json
+.ipynb_checkpoints/demo-credentials-checkpoint.json
+.ipynb_checkpoints/Dockerfile-checkpoint
+.ipynb_checkpoints/LITELLM_FIX_README-checkpoint.md
+.ipynb_checkpoints/litellm_service-checkpoint.sh
+.ipynb_checkpoints/LITELLM_SUCCESS_SUMMARY-checkpoint.md
+.ipynb_checkpoints/project-showcase-checkpoint.html
+.ipynb_checkpoints/README_CN-checkpoint.md
+.ipynb_checkpoints/README-checkpoint.md
+.ipynb_checkpoints/requirements-checkpoint.txt
+.ipynb_checkpoints/start_animation-checkpoint.py
+.ipynb_checkpoints/test_litellm-checkpoint.sh
+.ipynb_checkpoints/test_models-checkpoint.py
+.ipynb_checkpoints/testAnthropicClient-checkpoint.py
+.ipynb_checkpoints/testGPT5-checkpoint.py
+.ipynb_checkpoints/view_logs-checkpoint.py
+examples/.ipynb_checkpoints/22-checkpoint.html
+examples/.ipynb_checkpoints/demo-checkpoint.gif
+examples/.ipynb_checkpoints/demo-checkpoint.html
+gradio_in_animation/.env.example
+gradio_in_animation/.gitignore
+gradio_in_animation/app_gradio.py
+gradio_in_animation/config_manager.py
+gradio_in_animation/docker-compose.yml
+gradio_in_animation/Dockerfile
+gradio_in_animation/llm_manager.py
+gradio_in_animation/pytest.ini
+gradio_in_animation/QQ_1761744655887.png
+gradio_in_animation/QQ_1761751240624.png
+gradio_in_animation/README.md
+gradio_in_animation/requirements.txt
+gradio_in_animation/video_exporter.py
+gradio_in_animation/.claude/settings.local.json
+gradio_in_animation/.ipynb_checkpoints/config_manager-checkpoint.py
+gradio_in_animation/.ipynb_checkpoints/docker-compose-checkpoint.yml
+gradio_in_animation/.ipynb_checkpoints/Dockerfile-checkpoint
+gradio_in_animation/.ipynb_checkpoints/llm_manager-checkpoint.py
+gradio_in_animation/.ipynb_checkpoints/pytest-checkpoint.ini
+gradio_in_animation/.ipynb_checkpoints/README-checkpoint.md
+gradio_in_animation/.ipynb_checkpoints/requirements-checkpoint.txt
+gradio_in_animation/.ipynb_checkpoints/video_exporter-checkpoint.py
+gradio_in_animation/docs/API.md
+gradio_in_animation/docs/ARCHITECTURE.md
+gradio_in_animation/docs/MIGRATION.md
+gradio_in_animation/docs/.ipynb_checkpoints/API-checkpoint.md
+gradio_in_animation/docs/.ipynb_checkpoints/ARCHITECTURE-checkpoint.md
+gradio_in_animation/docs/.ipynb_checkpoints/MIGRATION-checkpoint.md
+gradio_in_animation/output/html/animation_20251029_002709.html
+gradio_in_animation/output/html/animation_20251029_002717.html
+gradio_in_animation/output/html/animation_20251029_221922.html
+gradio_in_animation/output/html/animation_20251029-235203.html
+gradio_in_animation/output/html/animation_20251030_130453.html
+gradio_in_animation/output/html/animation_20251030-000656.html
+gradio_in_animation/output/html/animation_20251030-130249.html
+gradio_in_animation/output/html/animation_20251030-130436.html
+gradio_in_animation/output/html/fullscreen_20251029_221929.html
+gradio_in_animation/output/html/fullscreen_20251029_230332.html
+gradio_in_animation/output/html/fullscreen_20251030_000907.html
+gradio_in_animation/shared/AnthropicClient.py
+gradio_in_animation/shared/credentials.json
+gradio_in_animation/shared/scripts
+gradio_in_animation/shared/.ipynb_checkpoints/credentials-checkpoint.json
+gradio_in_animation/tests/__init__.py
+gradio_in_animation/tests/test_config_manager.py
+gradio_in_animation/tests/test_integration.py
+gradio_in_animation/tests/test_llm_manager.py
+gradio_in_animation/tests/test_video_exporter.py
+openspec/AGENTS.md
+openspec/project.md
+openspec/.ipynb_checkpoints/AGENTS_CN-checkpoint.md
+openspec/.ipynb_checkpoints/AGENTS-checkpoint.md
+openspec/.ipynb_checkpoints/project_CN-checkpoint.md
+openspec/.ipynb_checkpoints/project-checkpoint.md
+openspec/changes/migrate-to-gradio/design.md
+openspec/changes/migrate-to-gradio/proposal.md
+openspec/changes/migrate-to-gradio/tasks.md
+openspec/changes/migrate-to-gradio/.ipynb_checkpoints/design-checkpoint.md
+openspec/changes/migrate-to-gradio/.ipynb_checkpoints/proposal-checkpoint.md
+openspec/changes/migrate-to-gradio/.ipynb_checkpoints/tasks-checkpoint.md
+openspec/changes/migrate-to-gradio/specs/ai-generation/spec.md
+openspec/changes/migrate-to-gradio/specs/ai-generation/.ipynb_checkpoints/spec-checkpoint.md
+output/b1a2eae266cea4bee65af2ef46b67ed1.mp4
+output/bubble_sort_animation.mp4
+output/capture-20251025-151047-43082a3c.mp4
+output/capture-20251028-131257-aabe51f6.mp4
+output/capture-20251028-131500-34a8859e.gif
+output/capture-20251028-131500-34a8859e.png
+output/capture-20251030-134924-dd0002f1.mp4
+output/capture-20251030-135130-679a32d6.gif
+output/capture-20251030-135130-679a32d6.png
+output/html/animation_20251029-234418.html
+output/html/animation_20251029-234439.html
+output/html/animation_20251029-234457.html
+scripts/record_media.py
+scripts/scripts
+scripts/.ipynb_checkpoints/__init__-checkpoint.py
+scripts/.ipynb_checkpoints/record_media-checkpoint.py
+static/script.js
+static/style.css
+static/.ipynb_checkpoints/favicon-checkpoint.svg
+templates/index.html
+templates/.ipynb_checkpoints/index-checkpoint.html
 test/config.yaml
 test/litellm_service.sh
 test/README.md
@@ -232,5 +172,15 @@ test/test_models.py
 test/testAnthropicClient.py
 test/testGPT5.py
 test/.claude/settings.local.json
+test/.ipynb_checkpoints/config-checkpoint.yaml
+test/.ipynb_checkpoints/litellm_service-checkpoint.sh
+test/.ipynb_checkpoints/README-checkpoint.md
+test/.ipynb_checkpoints/test_litellm_auth-checkpoint.py
+test/.ipynb_checkpoints/test_models-checkpoint.py
 test/anyrouter/config2.yaml
 test/anyrouter/config3.yaml
+test/anyrouter/.claude/settings.local.json
+test/anyrouter/.ipynb_checkpoints/config2-checkpoint.yaml
+test/anyrouter/.ipynb_checkpoints/config3-checkpoint.yaml
+CHANGES.md
+CLAUDE.md

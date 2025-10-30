@@ -42,6 +42,9 @@ Watch a quick demonstration of the animation generator in action:
 - **⚡ Streaming Generation**: Real-time SSE streaming output
 - **🎯 Multi-Turn Dialogue**: Iterative optimization through conversation
 - **🐳 Containerized Deployment**: Docker and Docker Compose support
+- **🔧 Multi-Model Support**: Support for Anthropic Claude, OpenAI-compatible LLMs, DeepSeek, and more
+- **✅ Connection Testing**: Built-in API connection validation with visual feedback
+- **📦 Dynamic Configuration**: Real-time API configuration via settings modal
 
 ### 🎯 Use Cases
 
@@ -219,6 +222,29 @@ Enter modification requests in the chat, such as:
 - **Open in New Window**: Preview in standalone window
 - **Save as HTML**: Download complete HTML file
 - **Export as Video**: Generate MP4 video (requires FFmpeg)
+- **Export as GIF**: Generate animated GIF (requires FFmpeg)
+
+#### 4. Settings & Configuration
+
+Click the settings button (⚙️) in the top-left corner to open the settings modal:
+
+**Configuration Options**:
+- **API Key**: Enter your LLM API key (required)
+- **Base URL**: API service address (optional, leave blank for default)
+- **Model Name**: Select model from dropdown list (required)
+
+**Test Connection**:
+- Click "Test Connection" button to validate API configuration
+- System displays visual feedback with success✓ or failure✗ icons
+- Success shows: "Test successful! Model 'xxx' is accessible"
+- Failure shows specific error messages (invalid API key, model not found, etc.)
+
+**Save Settings**:
+- After validation, click "Save Settings"
+- Configuration is automatically saved to `.env` file
+- Takes effect immediately, no server restart required
+
+#### 5. Topic Suggestions
 
 ### 🔌 API Reference
 
@@ -249,21 +275,92 @@ Record page and export video
   "height": 720,
   "fps": 24,
   "mp4": true,
+  "gif": true,
   "end_event": "recording:finished",
-  "end_timeout": 180000
+  "end_timeout": 180000,
+  "gif_fps": 10,
+  "gif_width": 720,
+  "gif_dither": "sierra2_4a"
+}
+```
+
+#### POST /config
+
+Get or update API configuration
+
+**Get Configuration (GET)**:
+```bash
+curl http://localhost:7860/config
+```
+
+**Update Configuration (POST)**:
+```bash
+curl -X POST http://localhost:7860/config \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "your-api-key",
+    "base_url": "https://api.example.com/v1",
+    "model": "your-model"
+  }'
+```
+
+#### POST /test-config
+
+Test API connection
+
+**Request Body**:
+```json
+{
+  "api_key": "your-api-key",
+  "base_url": "https://api.example.com/v1",
+  "model": "your-model"
+}
+```
+
+**Response (Success)**:
+```json
+{
+  "ok": true,
+  "message": "Test successful! Model 'your-model' is accessible",
+  "model": "your-model"
+}
+```
+
+**Response (Failure)**:
+```json
+{
+  "ok": false,
+  "error": "Test failed: Invalid API key"
 }
 ```
 
 ### 🐛 Troubleshooting
 
 #### API Key Error
-**Solution**: Check `credentials.json` exists and contains valid API key
+**Solution**:
+- Check `credentials.json` exists and contains valid API key
+- Or use the settings button (⚙️) in the top-left corner to configure via the web interface
+- Click "Test Connection" to validate your API key before saving
 
 #### FFmpeg Not Found
 **Solution**: Install FFmpeg or set `FFMPEG_PATH` environment variable
 
 #### Playwright Browser Not Installed
 **Solution**: Run `playwright install chromium`
+
+#### Model Not Supported
+**Solution**: Check the settings modal for supported models including:
+- ZhipuAI/GLM-4.6
+- minimax-m2
+- deepseek-ai/DeepSeek-V3.2-Exp
+- claude-haiku-4-5-20251001
+- Qwen/Qwen3-Coder-480B-A35B-Instruct
+
+#### Configuration Not Taking Effect
+**Solution**:
+- Configuration changes are saved to `.env` file and take effect immediately
+- No server restart required
+- Use the settings modal to update configuration at runtime
 
 ### 🤝 Contributing
 
@@ -288,6 +385,35 @@ This project is licensed under the [MIT License](LICENSE).
 - [GSAP](https://greensock.com/gsap/)
 
 
+
+### 📝 Changelog
+
+#### v2.1.0 (2025-10-30)
+
+**New Features**:
+- ✨ Added Settings Modal for web-based API configuration
+- ✨ Added Connection Testing with real-time API validation
+- ✨ Added Multi-Model Support: minimax-m2, DeepSeek-V3.2-Exp, Claude Haiku, Qwen3-Coder
+- ✨ Added GIF Export functionality for animated GIF format
+- 🎨 Enhanced Visual Feedback: Connection test shows ✓/✗ icons with animations
+- 📦 Added `.env` file support with hot-reload, no server restart needed
+
+**Improvements**:
+- 🔄 Enhanced recording with more parameters (gif_fps, gif_width, gif_dither)
+- 🎯 Better error handling and user feedback
+- 📱 Optimized frontend user experience
+
+**API Changes**:
+- New `/config` endpoint: Get and update configuration
+- New `/test-config` endpoint: Test API connection
+- Enhanced `/record` endpoint: Support GIF export parameters
+
+#### v2.0.0
+
+- 🤖 Initial release
+- 🎬 AI-powered educational animation generation
+- 📹 MP4 video export support
+- 🌍 Bilingual support
 
 ### Contact Us
 

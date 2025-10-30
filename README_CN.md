@@ -40,6 +40,9 @@ Instructional Animation 是一个基于大语言模型的教学动画生成工�
 - **⚡ 流式生成**：Server-Sent Events (SSE) 实时流式输出生成过程
 - **🎯 多轮对话**：支持对生成结果进行迭代优化和调整
 - **🐳 容器化部署**：Docker 一键部署，支持 Docker Compose
+- **🔧 多模型支持**：支持 Anthropic Claude、OpenAI 兼容接口、DeepSeek 等多种模型
+- **✅ 连接测试**：内置 API 连接验证功能，带视觉反馈提示
+- **📦 动态配置**：通过设置模态框实时配置 API 参数，无需重启服务
 
 ### 🎯 应用场景
 
@@ -235,7 +238,16 @@ in_animation/
 - OpenAI API
 - 智谱 AI (ZhipuAI)
 - ModelScope
+- Anthropic Claude
+- DeepSeek
 - 其他兼容 OpenAI API 的服务
+
+**支持的模型列表**：
+- ZhipuAI/GLM-4.6 - 智谱 AI 的 GLM-4.6 模型
+- minimax-m2 - MiniMax 的 m2 模型
+- deepseek-ai/DeepSeek-V3.2-Exp - DeepSeek 的 V3.2 实验版
+- claude-haiku-4-5-20251001 - Anthropic Claude 的 Haiku 模型
+- Qwen/Qwen3-Coder-480B-A35B-Instruct - 阿里云通义千问的 Coder 模型
 
 #### 环境变量
 
@@ -268,8 +280,29 @@ FFMPEG_PATH=/usr/bin/ffmpeg  # FFmpeg 路径（可选）
 - **在新窗口打开**：独立窗口预览动画
 - **保存为 HTML**：下载完整的 HTML 文件
 - **导出为视频**：生成 MP4 视频（需要 FFmpeg）
+- **导出为 GIF**：生成动画 GIF（需要 FFmpeg）
 
-#### 4. 话题建议
+#### 4. 设置与配置
+
+点击左上角的设置按钮（⚙️）打开设置模态框：
+
+**配置项目**：
+- **API Key**：输入您的 LLM API 密钥（必填）
+- **Base URL**：API 服务地址（可选，留空使用默认值）
+- **模型名称**：从下拉列表选择要使用的模型（必填）
+
+**测试连接**：
+- 点击"测试连接"按钮验证 API 配置
+- 系统会显示成功✓或失败✗的视觉提示
+- 成功后会显示"测试成功！模型 'xxx' 可正常访问"
+- 失败后会显示具体的错误信息（API Key无效、模型不存在等）
+
+**保存设置**：
+- 配置验证通过后点击"保存设置"
+- 配置会自动保存到 `.env` 文件
+- 立即生效，无需重启服务
+
+#### 5. 话题建议
 
 系统提供多个学科的话题建议：
 - 算法（冒泡排序、快速排序、Dijkstra 算法等）
@@ -316,9 +349,12 @@ data: {"event": "[DONE]"}
   "height": 720,
   "fps": 24,
   "mp4": true,
-  "gif": false,
+  "gif": true,
   "end_event": "recording:finished",
-  "end_timeout": 180000
+  "end_timeout": 180000,
+  "gif_fps": 10,
+  "gif_width": 720,
+  "gif_dither": "sierra2_4a"
 }
 ```
 
@@ -329,7 +365,59 @@ data: {"event": "[DONE]"}
   "webm": "/path/to/recording.webm",
   "webm_url": "/recordings/recording.webm",
   "mp4": "/path/to/output.mp4",
-  "mp4_url": "/output/output.mp4"
+  "mp4_url": "/output/output.mp4",
+  "gif": "/path/to/output.gif",
+  "gif_url": "/output/output.gif"
+}
+```
+
+#### POST /config
+
+获取或更新 API 配置
+
+**获取配置（GET）**：
+```bash
+curl http://localhost:7860/config
+```
+
+**更新配置（POST）**：
+```bash
+curl -X POST http://localhost:7860/config \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "your-api-key",
+    "base_url": "https://api.example.com/v1",
+    "model": "your-model"
+  }'
+```
+
+#### POST /test-config
+
+测试 API 连接
+
+**请求体**：
+```json
+{
+  "api_key": "your-api-key",
+  "base_url": "https://api.example.com/v1",
+  "model": "your-model"
+}
+```
+
+**响应（成功）**：
+```json
+{
+  "ok": true,
+  "message": "测试成功！模型 'your-model' 可正常访问",
+  "model": "your-model"
+}
+```
+
+**响应（失败）**：
+```json
+{
+  "ok": false,
+  "error": "测试失败: API Key 无效或已过期"
 }
 ```
 
@@ -354,6 +442,8 @@ data: {"event": "[DONE]"}
 - 检查 `credentials.json` 文件是否存在
 - 确认 `API_KEY` 不是 `sk-REPLACE_ME`
 - 验证 API 密钥是否有效
+- 或者点击左上角设置按钮（⚙️）通过网页界面配置
+- 点击"测试连接"验证 API 密钥是否有效
 
 #### 2. FFmpeg 未找到
 
@@ -389,6 +479,27 @@ playwright install-deps chromium
 - 尝试重新生成
 - 检查模型返回是否完整
 
+#### 5. 模型不支持
+
+**错误信息**：`模型名称不存在或无法访问`
+
+**解决方案**：查看设置模态框中支持的模型，包括：
+- ZhipuAI/GLM-4.6
+- minimax-m2
+- deepseek-ai/DeepSeek-V3.2-Exp
+- claude-haiku-4-5-20251001
+- Qwen/Qwen3-Coder-480B-A35B-Instruct
+
+#### 6. 配置不生效
+
+**错误信息**：修改配置后未立即生效
+
+**解决方案**：
+- 配置更改会保存到 `.env` 文件，立即生效
+- 无需重启服务器
+- 使用设置模态框在运行时更新配置
+- 配置更改后点击"测试连接"验证
+
 ### 🤝 贡献指南
 
 欢迎贡献代码、报告问题或提出建议！
@@ -412,6 +523,35 @@ playwright install-deps chromium
 - [GSAP](https://greensock.com/gsap/) - 动画库
 
 
+
+### 📝 更新日志
+
+#### v2.1.0 (2025-10-30)
+
+**新增功能**：
+- ✨ 新增设置模态框，支持通过网页界面配置 API 参数
+- ✨ 新增连接测试功能，支持实时验证 API 配置
+- ✨ 新增多模型支持：minimax-m2、DeepSeek-V3.2-Exp、Claude Haiku、Qwen3-Coder
+- ✨ 新增 GIF 导出功能，支持动画 GIF 格式导出
+- 🎨 增强视觉提示：连接测试成功/失败显示 ✓/✗ 图标和动画效果
+- 📦 支持 `.env` 文件配置，配置热重载无需重启服务
+
+**功能改进**：
+- 🔄 录制功能支持更多参数（gif_fps、gif_width、gif_dither）
+- 🎯 更好的错误处理和用户反馈
+- 📱 优化前端交互体验
+
+**API 变更**：
+- 新增 `/config` 端点：获取和更新配置
+- 新增 `/test-config` 端点：测试 API 连接
+- 增强 `/record` 端点：支持 GIF 导出参数
+
+#### v2.0.0
+
+- 🤖 初始版本发布
+- 🎬 支持 AI 生成教学动画
+- 📹 支持 MP4 视频导出
+- 🌍 双语支持
 
 ### 📞 联系我们
 

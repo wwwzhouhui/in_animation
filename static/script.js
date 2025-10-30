@@ -724,3 +724,168 @@ function hideWarning() {
     document.getElementById('warning-box').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
 }
+
+// 设置功能
+document.addEventListener('DOMContentLoaded', () => {
+    const settingsButton = document.getElementById('settings-button');
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsModalClose = document.getElementById('settings-modal-close');
+    const settingsForm = document.getElementById('settings-form');
+    const apiKeyInput = document.getElementById('api-key');
+    const baseUrlInput = document.getElementById('base-url');
+    const modelSelect = document.getElementById('model');
+    const testConnectionBtn = document.getElementById('test-connection');
+    const settingsMessage = document.getElementById('settings-message');
+
+    // 打开设置模态框
+    settingsButton.addEventListener('click', async () => {
+        // 加载当前配置
+        try {
+            const response = await fetch('/config');
+            const config = await response.json();
+
+            // 填充表单（不显示实际 API Key）
+            if (config.HAS_API_KEY) {
+                apiKeyInput.value = '****'; // 显示占位符
+            }
+            baseUrlInput.value = config.BASE_URL || '';
+            modelSelect.value = config.MODEL || 'ZhipuAI/GLM-4.6';
+        } catch (error) {
+            console.error('加载配置失败:', error);
+        }
+
+        settingsModal.classList.add('visible');
+    });
+
+    // 关闭设置模态框
+    settingsModalClose.addEventListener('click', () => {
+        settingsModal.classList.remove('visible');
+        // 清除消息
+        settingsMessage.textContent = '';
+        settingsMessage.className = 'settings-message';
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.classList.remove('visible');
+            // 清除消息
+            settingsMessage.textContent = '';
+            settingsMessage.className = 'settings-message';
+        }
+    });
+
+    // 测试连接（实际发起 API 请求验证）
+    testConnectionBtn.addEventListener('click', async () => {
+        const apiKey = apiKeyInput.value;
+        const baseUrl = baseUrlInput.value;
+        const model = modelSelect.value;
+
+        if (!apiKey || apiKey === 'sk-REPLACE_ME' || apiKey === '****') {
+            showSettingsMessage('请输入有效的 API Key', 'error');
+            return;
+        }
+
+        if (!model) {
+            showSettingsMessage('请选择模型', 'error');
+            return;
+        }
+
+        testConnectionBtn.disabled = true;
+        testConnectionBtn.textContent = '测试中...';
+
+        try {
+            // 使用专门的测试端点
+            const response = await fetch('/test-config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    api_key: apiKey,
+                    base_url: baseUrl,
+                    model: model
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.ok) {
+                showSettingsMessage(result.message, 'success');
+            } else {
+                showSettingsMessage(result.error || '测试失败', 'error');
+            }
+        } catch (error) {
+            showSettingsMessage('网络错误，请稍后重试', 'error');
+        } finally {
+            testConnectionBtn.disabled = false;
+            testConnectionBtn.textContent = '测试连接';
+        }
+    });
+
+    // 保存设置
+    settingsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const apiKey = apiKeyInput.value;
+        const baseUrl = baseUrlInput.value;
+        const model = modelSelect.value;
+
+        if (!apiKey || apiKey === 'sk-REPLACE_ME') {
+            showSettingsMessage('API Key 不能为空', 'error');
+            return;
+        }
+
+        const submitBtn = settingsForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '保存中...';
+
+        try {
+            const response = await fetch('/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_key: apiKey, base_url: baseUrl, model: model })
+            });
+
+            const result = await response.json();
+
+            if (result.ok) {
+                showSettingsMessage('设置已保存并生效！', 'success');
+                setTimeout(() => {
+                    settingsModal.classList.remove('visible');
+                    settingsMessage.textContent = '';
+                    settingsMessage.className = 'settings-message';
+                }, 1500);
+            } else {
+                showSettingsMessage(`保存失败: ${result.error || '未知错误'}`, 'error');
+            }
+        } catch (error) {
+            showSettingsMessage('保存设置失败，请检查网络', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '保存设置';
+        }
+    });
+
+    function showSettingsMessage(message, type) {
+        settingsMessage.textContent = message;
+        settingsMessage.className = `settings-message ${type} show`;
+
+        // 自动隐藏消息（3秒后）
+        setTimeout(() => {
+            if (settingsMessage.classList.contains('show')) {
+                settingsMessage.classList.remove('show');
+                // 清除类名，只保留基础的 settings-message
+                setTimeout(() => {
+                    settingsMessage.className = 'settings-message';
+                }, 400); // 等待动画完成
+            }
+        }, 3000);
+
+        // 添加点击关闭功能
+        settingsMessage.onclick = () => {
+            settingsMessage.classList.remove('show');
+            setTimeout(() => {
+                settingsMessage.className = 'settings-message';
+                settingsMessage.onclick = null; // 清除事件
+            }, 400);
+        };
+    }
+});

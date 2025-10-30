@@ -21,6 +21,11 @@
         <button data-lang="en">EN</button>
     </div>
 
+    <!-- 设置按钮 -->
+    <button id="settings-button" class="settings-button" title="设置">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+
     <div id="initial-view" class="initial-view">
         <img src="/static/logo.svg" alt="Instructional Animation Logo" class="logo" id="logo-initial">
 
@@ -130,6 +135,42 @@
             <button id="modal-close-button" class="modal-close-button" title="Close">×</button>
             <p data-translate-key="featureComingSoon">该功能正在开发中...</p>
             <button id="modal-github-button" class="modal-button" data-translate-key="visitGitHub">访问 GitHub</button>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content settings-modal-content">
+            <button id="settings-modal-close" class="modal-close-button" title="关闭">×</button>
+            <h2>模型 API 设置</h2>
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="api-key">API Key</label>
+                    <input type="password" id="api-key" placeholder="输入您的 API Key" required>
+                    <small>用于访问 AI 模型服务的密钥</small>
+                </div>
+                <div class="form-group">
+                    <label for="base-url">Base URL (可选)</label>
+                    <input type="text" id="base-url" placeholder="例如: https://api.openai.com/v1">
+                    <small>AI 服务的 API 地址，留空使用默认值</small>
+                </div>
+                <div class="form-group">
+                    <label for="model">模型名称</label>
+                    <select id="model" required>
+                        <option value="ZhipuAI/GLM-4.6">ZhipuAI/GLM-4.6</option>
+                        <option value="minimax-m2">minimax-m2</option>
+                        <option value="deepseek-ai/DeepSeek-V3.2-Exp">DeepSeek-V3.2-Exp</option>
+                        <option value="claude-haiku-4-5-20251001">claude-haiku-4-5-20251001</option>
+                        <option value="Qwen/Qwen3-Coder-480B-A35B-Instruct">Qwen3-Coder-480B-A35B-Instruct</option>
+                    </select>
+                    <small>选择要使用的 AI 模型</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="test-connection" class="button-secondary">测试连接</button>
+                    <button type="submit" class="button-primary">保存设置</button>
+                </div>
+                <div id="settings-message" class="settings-message"></div>
+            </form>
         </div>
     </div>
 

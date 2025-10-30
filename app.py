@@ -20,6 +20,13 @@ from pathlib import Path
 # 导入 Anthropic 客户端
 from AnthropicClient import AnthropicClient, anthropic_stream_to_sse
 
+# 导入 dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    load_dotenv = None
+
 # 录制与转码工具（Playwright + FFmpeg）
 try:
     from scripts.record_media import load_page_and_record, run_ffmpeg, which
@@ -28,10 +35,133 @@ except Exception:
     run_ffmpeg = None
     which = None
 
+# 导入线程模块（用于配置管理）
+import threading
+
 # -----------------------------------------------------------------------
 # 0. 配置
 # -----------------------------------------------------------------------
+HOST = "127.0.0.1"
+PORT = 8000
 shanghai_tz = pytz.timezone("Asia/Shanghai")
+
+# 配置管理类
+class ConfigManager:
+    """动态配置管理器"""
+    _instance = None
+    _config_path = "credentials.json"
+    _env_config_path = ".env"
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self):
+        if self._initialized:
+            return
+        self._initialized = True
+        self._lock = threading.Lock()
+        self.load_config()
+
+    def load_config(self):
+        """加载配置，优先使用 .env，其次使用 credentials.json"""
+        # 创建局部logger避免初始化顺序问题
+        import logging
+        config_logger = logging.getLogger("ai_animation_config")
+
+        # 优先从环境变量获取
+        api_key = os.getenv('API_KEY')
+        base_url = os.getenv('BASE_URL')
+        model = os.getenv('MODEL')
+
+        # 如果没有环境变量，从 credentials.json 读取
+        if not api_key or api_key == "sk-REPLACE_ME":
+            try:
+                if os.path.exists(self._config_path):
+                    creds = json.load(open(self._config_path))
+                    api_key = creds.get("API_KEY", api_key)
+                    base_url = creds.get("BASE_URL", base_url)
+                    model = creds.get("MODEL", model)
+            except Exception as e:
+                config_logger.error(f"加载 credentials.json 失败: {e}")
+
+        # 设置默认值
+        self.API_KEY = api_key or ""
+        self.BASE_URL = base_url or ""
+        self.MODEL = model or "ZhipuAI/GLM-4.6"
+
+        # 记录配置状态
+        if self.API_KEY and self.API_KEY != "sk-REPLACE_ME":
+            config_logger.info("配置加载成功")
+            config_logger.info(f"模型: {self.MODEL}")
+            config_logger.info(f"Base URL: {self.BASE_URL if self.BASE_URL else '默认'}")
+            config_logger.info("API Key: ****")
+        else:
+            config_logger.warning("未找到有效的 API Key 配置")
+
+    def save_env_config(self, api_key: str, base_url: str, model: str):
+        """保存配置到 .env 文件"""
+        import logging
+        config_logger = logging.getLogger("ai_animation_config")
+        try:
+            # 创建或更新 .env 文件
+            env_vars = []
+
+            # 读取现有配置
+            if os.path.exists(self._env_config_path):
+                with open(self._env_config_path, 'r') as f:
+                    existing_vars = {}
+                    for line in f:
+                        line = line.strip()
+                        if '=' in line and not line.startswith('#'):
+                            key, _ = line.split('=', 1)
+                            existing_vars[key] = line
+
+            # 更新或添加配置
+            env_vars = list(existing_vars.values())
+            env_vars.append(f"API_KEY={api_key}")
+            env_vars.append(f"BASE_URL={base_url}")
+            env_vars.append(f"MODEL={model}")
+
+            # 写入文件
+            with open(self._env_config_path, 'w') as f:
+                f.write("# API 配置 - 不要提交到版本控制\n")
+                f.write("\n".join(env_vars))
+                f.write("\n")
+
+            config_logger.info(".env 配置文件已更新")
+            return True
+        except Exception as e:
+            config_logger.error(f"保存 .env 配置失败: {e}")
+            return False
+
+    def reload_config(self):
+        """重新加载配置"""
+        import logging
+        config_logger = logging.getLogger("ai_animation_config")
+        config_logger.info("重新加载配置...")
+        if load_dotenv:
+            load_dotenv(override=True)
+        self.load_config()
+        config_logger.info("配置重新加载完成")
+
+    def get_config(self) -> Dict[str, str]:
+        """获取当前配置（不包含敏感信息）"""
+        return {
+            "API_KEY": "****" if self.API_KEY else "",
+            "BASE_URL": self.BASE_URL,
+            "MODEL": self.MODEL,
+            "HAS_API_KEY": bool(self.API_KEY and self.API_KEY != "sk-REPLACE_ME")
+        }
+
+    def get_api_key(self) -> str:
+        """获取 API Key（用于实际请求）"""
+        return self.API_KEY
+
+# 创建全局配置管理器实例
+config_manager = ConfigManager()
 
 # 配置日志系统
 def setup_logger():
@@ -75,36 +205,55 @@ def setup_logger():
 
 logger = setup_logger()
 
-credentials = json.load(open("credentials.json"))
-API_KEY = credentials["API_KEY"]
-BASE_URL = credentials.get("BASE_URL", "")
-MODEL = credentials.get("MODEL", "ZhipuAI/GLM-4.6")
+# 使用配置管理器获取配置（不再直接加载 credentials.json）
+API_KEY = config_manager.get_api_key()
+BASE_URL = config_manager.BASE_URL
+MODEL = config_manager.MODEL
 
+# 检查 API_KEY 是否有效（但不再抛出异常，允许通过前端配置）
 if not API_KEY or API_KEY == "sk-REPLACE_ME":
-    raise RuntimeError("请在 credentials.json 里配置正确的 API_KEY")
+    logger.warning("未配置 API_KEY，请通过前端设置页面配置")
 
 # 判断使用哪种接口：根据模型名称自动识别
 def is_anthropic_model(model_name: str) -> bool:
     """判断是否是 Anthropic Claude 模型"""
     return "claude" in model_name.lower()
 
-# 初始化客户端
-if is_anthropic_model(MODEL):
-    # 使用 Anthropic 客户端
-    anthropic_client = AnthropicClient(
-        api_key=API_KEY,
-        base_url=BASE_URL if BASE_URL else "https://api.anthropic.com"
-    )
-    openai_client = None
-    logger.info(f"使用 Anthropic 接口，模型: {MODEL}")
-else:
-    # 使用 OpenAI 兼容客户端
-    openai_client = AsyncOpenAI(
-        api_key=API_KEY,
-        base_url=BASE_URL
-    )
-    anthropic_client = None
-    logger.info(f"使用 OpenAI 兼容接口，模型: {MODEL}")
+# 客户端初始化（延迟初始化，支持动态配置）
+anthropic_client = None
+openai_client = None
+
+def get_clients():
+    """动态获取客户端实例，支持配置更新"""
+    global anthropic_client, openai_client
+
+    # 重新获取配置
+    api_key = config_manager.get_api_key()
+    base_url = config_manager.BASE_URL
+    model = config_manager.MODEL
+
+    # 如果没有有效的 API_KEY，返回 None
+    if not api_key or api_key == "sk-REPLACE_ME":
+        logger.warning("未配置有效的 API_KEY")
+        return None, None, None
+
+    # 根据模型类型创建客户端
+    if is_anthropic_model(model):
+        anthropic_client = AnthropicClient(
+            api_key=api_key,
+            base_url=base_url if base_url else "https://api.anthropic.com"
+        )
+        openai_client = None
+        logger.info(f"使用 Anthropic 接口，模型: {model}")
+        return anthropic_client, None, model
+    else:
+        openai_client = AsyncOpenAI(
+            api_key=api_key,
+            base_url=base_url
+        )
+        anthropic_client = None
+        logger.info(f"使用 OpenAI 兼容接口，模型: {model}")
+        return None, openai_client, model
 
 templates = Jinja2Templates(directory="templates")
 
@@ -337,6 +486,19 @@ async def llm_event_stream(
         {"role": "user", "content": topic},
     ]
 
+    # 动态获取客户端
+    anthropic_cli, openai_cli, current_model = get_clients()
+
+    # 如果没有有效的客户端，返回错误
+    if anthropic_cli is None and openai_cli is None:
+        error_msg = "未配置有效的 API Key，请先在设置页面配置"
+        logger.error(error_msg)
+        yield f"data: {json.dumps({'error': error_msg}, ensure_ascii=False)}\n\n"
+        return
+
+    # 使用当前配置的模型
+    model = current_model
+
     # 根据模型类型选择接口
     if is_anthropic_model(model):
         # 使用 Anthropic 接口
@@ -344,7 +506,7 @@ async def llm_event_stream(
         logger.info(f"主题: {topic[:100]}...")  # 只记录前100个字符
         try:
             async for sse_chunk in anthropic_stream_to_sse(
-                client=anthropic_client,
+                client=anthropic_cli,
                 model=model,
                 messages=messages,
                 temperature=0.8,
@@ -360,7 +522,7 @@ async def llm_event_stream(
         logger.info(f"使用 OpenAI 兼容接口生成内容，模型: {model}")
         logger.info(f"主题: {topic[:100]}...")  # 只记录前100个字符
         try:
-            response = await openai_client.chat.completions.create(
+            response = await openai_cli.chat.completions.create(
                 model=model,
                 messages=messages,
                 stream=True,
@@ -565,11 +727,136 @@ async def record_media(req: RecordRequest):
     return JSONResponse(result)
 
 # -----------------------------------------------------------------------
-# 4. 本地启动命令
+# 3.5 配置管理路由
 # -----------------------------------------------------------------------
-# uvicorn app:app --reload --host 0.0.0.0 --port 8000
+
+class ConfigUpdateRequest(BaseModel):
+    api_key: str
+    base_url: Optional[str] = ""
+    model: str
+
+@app.get("/config")
+async def get_config(request: Request):
+    """获取当前配置"""
+    client_host = request.client.host if request.client else "unknown"
+    logger.info(f"获取配置 - 来自: {client_host}")
+    return JSONResponse(config_manager.get_config())
+
+@app.post("/config")
+async def update_config(config_req: ConfigUpdateRequest, request: Request):
+    """更新配置"""
+    client_host = request.client.host if request.client else "unknown"
+    logger.info(f"更新配置 - 来自: {client_host}")
+
+    # 验证 API Key
+    if not config_req.api_key or config_req.api_key == "sk-REPLACE_ME":
+        return JSONResponse({"ok": False, "error": "API Key 不能为空"}, status_code=400)
+
+    # 验证模型
+    if not config_req.model:
+        return JSONResponse({"ok": False, "error": "模型名称不能为空"}, status_code=400)
+
+    # 保存到 .env 文件
+    if config_manager.save_env_config(
+        api_key=config_req.api_key,
+        base_url=config_req.base_url or "",
+        model=config_req.model
+    ):
+        # 重新加载配置
+        config_manager.reload_config()
+        logger.info("配置更新成功")
+        return JSONResponse({"ok": True, "message": "配置已更新"})
+    else:
+        return JSONResponse({"ok": False, "error": "保存配置失败"}, status_code=500)
+
+@app.post("/test-config")
+async def test_config(config_req: ConfigUpdateRequest, request: Request):
+    """测试 API 配置是否有效（实际发起请求验证）"""
+    client_host = request.client.host if request.client else "unknown"
+    logger.info(f"测试配置 - 来自: {client_host}")
+
+    # 验证参数
+    if not config_req.api_key or config_req.api_key == "sk-REPLACE_ME":
+        return JSONResponse({"ok": False, "error": "API Key 不能为空"}, status_code=400)
+
+    if not config_req.model:
+        return JSONResponse({"ok": False, "error": "模型名称不能为空"}, status_code=400)
+
+    # 临时创建客户端进行测试
+    temp_api_key = config_req.api_key
+    temp_base_url = config_req.base_url or ""
+    temp_model = config_req.model
+
+    try:
+        # 根据模型类型创建临时客户端
+        if is_anthropic_model(temp_model):
+            test_client = AnthropicClient(
+                api_key=temp_api_key,
+                base_url=temp_base_url if temp_base_url else "https://api.anthropic.com"
+            )
+            # 发送一个简单的测试请求
+            messages = [
+                {"role": "user", "content": "Hi"}
+            ]
+            # 使用同步方式测试
+            test_response = None
+            async def _test():
+                async for chunk in anthropic_stream_to_sse(
+                    client=test_client,
+                    model=temp_model,
+                    messages=messages,
+                    temperature=0.1,
+                    max_tokens=10,
+                ):
+                    nonlocal test_response
+                    if not test_response:
+                        test_response = chunk
+                    break  # 只取第一个chunk就退出
+            await _test()
+
+        else:
+            test_client = AsyncOpenAI(
+                api_key=temp_api_key,
+                base_url=temp_base_url
+            )
+            # 发送一个简单的测试请求
+            response = await test_client.chat.completions.create(
+                model=temp_model,
+                messages=[{"role": "user", "content": "Hi"}],
+                max_tokens=10,
+                temperature=0.1,
+            )
+            test_response = response.choices[0].message.content
+
+        logger.info(f"测试连接成功 - 模型: {temp_model}")
+        return JSONResponse({
+            "ok": True,
+            "message": f"测试成功！模型 '{temp_model}' 可正常访问",
+            "model": temp_model
+        })
+    except Exception as e:
+        logger.error(f"测试连接失败: {str(e)}")
+        error_msg = str(e)
+        # 提取关键错误信息
+        if "401" in error_msg or "Unauthorized" in error_msg:
+            error_msg = "API Key 无效或已过期"
+        elif "404" in error_msg or "not found" in error_msg.lower():
+            error_msg = "模型名称不存在或无法访问"
+        elif "429" in error_msg or "rate limit" in error_msg.lower():
+            error_msg = "请求频率超限，请稍后重试"
+        elif "quota" in error_msg.lower() or "billing" in error_msg.lower():
+            error_msg = "API 配额不足或计费问题"
+        return JSONResponse({
+            "ok": False,
+            "error": f"测试失败: {error_msg}"
+        }, status_code=400)
+
+# -----------------------------------------------------------------------
+# 4. 启动逻辑
+# -----------------------------------------------------------------------
+# uvicorn app:app --reload --host 0.0.0.0 --port 7860
 
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run(app, host="0.0.0.0", port=7860, reload=False)

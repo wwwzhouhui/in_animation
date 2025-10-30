@@ -181,7 +181,9 @@ async def load_page_and_record(
         await browser.close()
 
         # 取视频文件（Playwright 默认生成 .webm 文件在 context 目录）
-        vids = list(out_dir.glob("**/*.webm"))
+        # Ensure out_dir is a Path object
+        out_path = Path(out_dir) if not isinstance(out_dir, Path) else out_dir
+        vids = list(out_path.glob("**/*.webm"))
         if not vids:
             raise RuntimeError("未生成 webm 文件，请检查录制配置")
         latest = max(vids, key=lambda p: p.stat().st_mtime)
