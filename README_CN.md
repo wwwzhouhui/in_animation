@@ -78,14 +78,17 @@ Instructional Animation 是一个基于大语言模型的教学动画生成工�
 
 1. **配置 API 密钥**
 
-创建 `credentials.json` 文件：
+复制示例配置文件：
+```bash
+cp .env.example .env
+```
 
-```json
-{
-  "API_KEY": "your-api-key-here",
-  "BASE_URL": "https://api.example.com/v1",
-  "MODEL": "your-model-name"
-}
+然后编辑 `.env` 文件并填入实际值：
+
+```env
+API_KEY=your-api-key-here
+BASE_URL=https://api.example.com/v1
+MODEL=your-model-name
 ```
 
 2. **启动服务**
@@ -108,14 +111,12 @@ docker-compose up -d
 docker pull wwwzhouhui569/in_animation:latest
 ```
 
-2. 准备配置文件（在当前目录创建 `credentials.json`）
+2. 准备配置文件（在当前目录创建 `.env`）
 
-```json
-{
-  "API_KEY": "你的API密钥",
-  "BASE_URL": "https://api.example.com/v1",
-  "MODEL": "你的模型名称"
-}
+```env
+API_KEY=你的API密钥
+BASE_URL=https://api.example.com/v1
+MODEL=你的模型名称
 ```
 
 3. 运行容器（将当前目录挂载到容器内）
@@ -124,7 +125,7 @@ docker pull wwwzhouhui569/in_animation:latest
 docker run -d \
   --name in_animation \
   -p 8000:8000 \
-  -v $(pwd)/credentials.json:/app/credentials.json:ro \
+  -v $(pwd)/.env:/app/.env:ro \
   -v $(pwd)/output:/app/output \
   -e TZ=Asia/Shanghai \
   wwwzhouhui569/in_animation:latest
@@ -185,7 +186,12 @@ brew install ffmpeg
 
 5. **配置 API 密钥**
 
-创建 `credentials.json`（参考上方配置）
+复制示例文件并配置：
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件填入 API 密钥，或使用网页界面设置模态框（⚙️）在运行时配置
 
 6. **启动服务**
 
@@ -205,7 +211,8 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 in_animation/
 ├── app.py                  # FastAPI 主应用
 ├── requirements.txt        # Python 依赖
-├── credentials.json        # API 配置（需自行创建）
+├── .env                    # API 配置（自行创建）
+├── .env.example            # API 配置模板
 ├── Dockerfile             # Docker 镜像构建文件
 ├── docker-compose.yml     # Docker Compose 配置
 ├── templates/             # Jinja2 模板
@@ -224,15 +231,27 @@ in_animation/
 
 ### 🔧 配置说明
 
-#### credentials.json
+#### .env 文件
 
-```json
-{
-  "API_KEY": "sk-xxxxxxxxxx",           // LLM API 密钥（必填）
-  "BASE_URL": "https://api.example.com/v1",  // API 基础 URL（可选）
-  "MODEL": "ZhipuAI/GLM-4.6"            // 模型名称（可选）
-}
+复制配置模板：
+```bash
+cp .env.example .env
 ```
+
+编辑 `.env` 文件填入实际值：
+
+```env
+API_KEY=sk-xxxxxxxxxx           # LLM API 密钥（必填）
+BASE_URL=https://api.example.com/v1  # API 基础 URL（可选）
+MODEL=ZhipuAI/GLM-4.6            # 模型名称（可选）
+```
+
+**配置优先级**：
+1. 环境变量（最高优先级）
+2. `.env` 文件
+3. `credentials.json`（向后兼容，已弃用）
+
+**推荐使用 `.env` 文件或通过网页界面设置**，两者支持热重载，无需重启服务。
 
 支持的 LLM 提供商：
 - OpenAI API
@@ -436,10 +455,10 @@ curl -X POST http://localhost:7860/config \
 
 #### 1. API 密钥错误
 
-**错误信息**：`请在 credentials.json 里配置正确的 API_KEY`
+**错误信息**：`请在 .env 里配置正确的 API_KEY`
 
 **解决方案**：
-- 检查 `credentials.json` 文件是否存在
+- 检查 `.env` 文件是否存在并包含有效的 API 密钥
 - 确认 `API_KEY` 不是 `sk-REPLACE_ME`
 - 验证 API 密钥是否有效
 - 或者点击左上角设置按钮（⚙️）通过网页界面配置
@@ -535,11 +554,17 @@ playwright install-deps chromium
 - ✨ 新增 GIF 导出功能，支持动画 GIF 格式导出
 - 🎨 增强视觉提示：连接测试成功/失败显示 ✓/✗ 图标和动画效果
 - 📦 支持 `.env` 文件配置，配置热重载无需重启服务
+- 📄 新增 `.env.example` 配置模板文件
 
 **功能改进**：
 - 🔄 录制功能支持更多参数（gif_fps、gif_width、gif_dither）
 - 🎯 更好的错误处理和用户反馈
 - 📱 优化前端交互体验
+
+**配置变更**：
+- 🆕 优先使用 `.env` 文件而非 `credentials.json`
+- 🔄 配置优先级：环境变量 > `.env` > `credentials.json`（向后兼容）
+- ✅ 推荐使用 `.env` 或网页界面设置，支持热重载
 
 **API 变更**：
 - 新增 `/config` 端点：获取和更新配置

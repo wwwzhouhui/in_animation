@@ -80,14 +80,17 @@ Watch a quick demonstration of the animation generator in action:
 
 1. **Configure API Key**
 
-Create `credentials.json`:
+Copy the example configuration file:
+```bash
+cp .env.example .env
+```
 
-```json
-{
-  "API_KEY": "your-api-key-here",
-  "BASE_URL": "https://api.example.com/v1",
-  "MODEL": "your-model-name"
-}
+Then edit `.env` and fill in your actual values:
+
+```env
+API_KEY=your-api-key-here
+BASE_URL=https://api.example.com/v1
+MODEL=your-model-name
 ```
 
 2. **Start Service**
@@ -110,14 +113,12 @@ We provide an official image for easy deployment from Docker Hub: `hub.docker.co
 docker pull wwwzhouhui569/in_animation:latest
 ```
 
-2. Prepare configuration file (create `credentials.json` in the current directory)
+2. Prepare configuration file (create `.env` in the current directory)
 
-```json
-{
-  "API_KEY": "your API key",
-  "BASE_URL": "https://api.example.com/v1",
-  "MODEL": "your model name"
-}
+```env
+API_KEY=your-api-key
+BASE_URL=https://api.example.com/v1
+MODEL=your-model-name
 ```
 
 3. Run the container (mount the current directory into the container)
@@ -126,7 +127,7 @@ docker pull wwwzhouhui569/in_animation:latest
 docker run -d \
   --name in_animation \
   -p 8000:8000 \
-  -v $(pwd)/credentials.json:/app/credentials.json:ro \
+  -v $(pwd)/.env:/app/.env:ro \
   -v $(pwd)/output:/app/output \
   -e TZ=Asia/Shanghai \
   wwwzhouhui569/in_animation:latest
@@ -187,7 +188,12 @@ brew install ffmpeg
 
 5. **Configure API Key**
 
-Create `credentials.json` (see above)
+Copy the example file and configure:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and fill in your API key, or use the web interface settings modal (⚙️) to configure at runtime
 
 6. **Start Service**
 
@@ -338,7 +344,7 @@ Test API connection
 
 #### API Key Error
 **Solution**:
-- Check `credentials.json` exists and contains valid API key
+- Check `.env` file exists and contains valid API key
 - Or use the settings button (⚙️) in the top-left corner to configure via the web interface
 - Click "Test Connection" to validate your API key before saving
 
@@ -397,11 +403,17 @@ This project is licensed under the [MIT License](LICENSE).
 - ✨ Added GIF Export functionality for animated GIF format
 - 🎨 Enhanced Visual Feedback: Connection test shows ✓/✗ icons with animations
 - 📦 Added `.env` file support with hot-reload, no server restart needed
+- 📄 Added `.env.example` configuration template file
 
 **Improvements**:
 - 🔄 Enhanced recording with more parameters (gif_fps, gif_width, gif_dither)
 - 🎯 Better error handling and user feedback
 - 📱 Optimized frontend user experience
+
+**Configuration Changes**:
+- 🆕 Prefer `.env` file over `credentials.json`
+- 🔄 Configuration priority: Environment variables > `.env` > `credentials.json` (backward compatible)
+- ✅ Recommend using `.env` or web interface settings, both support hot-reload
 
 **API Changes**:
 - New `/config` endpoint: Get and update configuration
