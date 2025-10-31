@@ -854,9 +854,9 @@ async def test_config(config_req: ConfigUpdateRequest, request: Request):
 # -----------------------------------------------------------------------
 # 4. 启动逻辑
 # -----------------------------------------------------------------------
-# uvicorn app:app --reload --host 0.0.0.0 --port 7860
+# uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860, reload=False)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)

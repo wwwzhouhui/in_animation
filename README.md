@@ -107,13 +107,13 @@ Open browser: `http://localhost:8000`
 
 We provide an official image for easy deployment from Docker Hub: `hub.docker.com/r/wwwzhouhui569/in_animation`
 
-1. Pull the image
+1. **Pull the image**
 
 ```bash
 docker pull wwwzhouhui569/in_animation:latest
 ```
 
-2. Prepare configuration file (create `.env` in the current directory)
+2. **Prepare configuration file** (create `.env` in the current directory)
 
 ```env
 API_KEY=your-api-key
@@ -121,7 +121,7 @@ BASE_URL=https://api.example.com/v1
 MODEL=your-model-name
 ```
 
-3. Run the container (mount the current directory into the container)
+3. **Run the container** (recommended with volume mounts)
 
 ```bash
 docker run -d \
@@ -129,23 +129,73 @@ docker run -d \
   -p 8000:8000 \
   -v $(pwd)/.env:/app/.env:ro \
   -v $(pwd)/output:/app/output \
+  -v $(pwd)/logs:/app/logs \
   -e TZ=Asia/Shanghai \
+  --restart unless-stopped \
   wwwzhouhui569/in_animation:latest
 ```
 
-4. Access the application
+**Volume Mount Explanation**:
+- `-v $(pwd)/.env:/app/.env:ro` - Mount configuration file (read-only)
+- `-v $(pwd)/output:/app/output` - Mount output directory (videos and GIF files)
+- `-v $(pwd)/logs:/app/logs` - Mount logs directory (optional)
+- `-e TZ=Asia/Shanghai` - Set timezone to Shanghai
+- `--restart unless-stopped` - Auto-restart container on failure
+
+4. **Access the application**
 
 Open the browser: `http://localhost:8000`
 
-Optional: To customize the `ffmpeg` path or timezone, pass environment variables, for example:
+5. **View logs**
+
+```bash
+# View container runtime logs
+docker logs -f in_animation
+
+# View application logs (if logs directory is mounted)
+python view_logs.py
+```
+
+6. **Stop and manage container**
+
+```bash
+# Stop container
+docker stop in_animation
+
+# Start container
+docker start in_animation
+
+# Restart container
+docker restart in_animation
+
+# Remove container
+docker rm -f in_animation
+```
+
+**Advanced Configuration**:
+
+To customize more environment variables, use the following parameters:
 
 ```bash
 docker run -d \
+  --name in_animation \
   -p 8000:8000 \
-  -e FFMPEG_PATH=/usr/bin/ffmpeg \
+  -v $(pwd)/.env:/app/.env:ro \
+  -v $(pwd)/output:/app/output \
+  -v $(pwd)/logs:/app/logs \
   -e TZ=Asia/Shanghai \
+  -e FFMPEG_PATH=/usr/bin/ffmpeg \
+  -e API_KEY=your-api-key \
+  -e BASE_URL=https://api.example.com/v1 \
+  -e MODEL=your-model-name \
+  --restart unless-stopped \
   wwwzhouhui569/in_animation:latest
 ```
+
+**Environment Variable Priority**:
+1. `-e` environment variables (highest priority)
+2. `.env` file
+3. `credentials.json` (deprecated, backward compatible)
 
 #### Method 2: Local Development
 

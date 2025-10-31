@@ -105,13 +105,13 @@ docker-compose up -d
 
 我们提供了官方镜像，便于用户直接从镜像仓库获取并部署：`hub.docker.com/r/wwwzhouhui569/in_animation`
 
-1. 拉取镜像
+1. **拉取镜像**
 
 ```bash
 docker pull wwwzhouhui569/in_animation:latest
 ```
 
-2. 准备配置文件（在当前目录创建 `.env`）
+2. **准备配置文件**（在当前目录创建 `.env`）
 
 ```env
 API_KEY=你的API密钥
@@ -119,7 +119,7 @@ BASE_URL=https://api.example.com/v1
 MODEL=你的模型名称
 ```
 
-3. 运行容器（将当前目录挂载到容器内）
+3. **运行容器**（推荐挂载配置和输出目录）
 
 ```bash
 docker run -d \
@@ -127,23 +127,73 @@ docker run -d \
   -p 8000:8000 \
   -v $(pwd)/.env:/app/.env:ro \
   -v $(pwd)/output:/app/output \
+  -v $(pwd)/logs:/app/logs \
   -e TZ=Asia/Shanghai \
+  --restart unless-stopped \
   wwwzhouhui569/in_animation:latest
 ```
 
-4. 访问应用
+**挂载说明**：
+- `-v $(pwd)/.env:/app/.env:ro` - 挂载配置文件（只读）
+- `-v $(pwd)/output:/app/output` - 挂载输出目录（视频和 GIF 文件）
+- `-v $(pwd)/logs:/app/logs` - 挂载日志目录（可选）
+- `-e TZ=Asia/Shanghai` - 设置时区为上海
+- `--restart unless-stopped` - 容器异常退出时自动重启
+
+4. **访问应用**
 
 打开浏览器访问：`http://localhost:8000`
 
-可选：如需自定义 `ffmpeg` 路径或时区，可通过环境变量传入，例如：
+5. **查看日志**
+
+```bash
+# 查看容器运行日志
+docker logs -f in_animation
+
+# 查看应用日志（如果挂载了 logs 目录）
+python view_logs.py
+```
+
+6. **停止和管理容器**
+
+```bash
+# 停止容器
+docker stop in_animation
+
+# 启动容器
+docker start in_animation
+
+# 重启容器
+docker restart in_animation
+
+# 删除容器
+docker rm -f in_animation
+```
+
+**高级配置**：
+
+如需自定义更多环境变量，可以使用以下参数：
 
 ```bash
 docker run -d \
+  --name in_animation \
   -p 8000:8000 \
-  -e FFMPEG_PATH=/usr/bin/ffmpeg \
+  -v $(pwd)/.env:/app/.env:ro \
+  -v $(pwd)/output:/app/output \
+  -v $(pwd)/logs:/app/logs \
   -e TZ=Asia/Shanghai \
+  -e FFMPEG_PATH=/usr/bin/ffmpeg \
+  -e API_KEY=your-api-key \
+  -e BASE_URL=https://api.example.com/v1 \
+  -e MODEL=your-model-name \
+  --restart unless-stopped \
   wwwzhouhui569/in_animation:latest
 ```
+
+**环境变量优先级**：
+1. `-e` 环境变量（最高优先级）
+2. `.env` 文件
+3. `credentials.json`（已弃用，向后兼容）
 
 #### 方式二：本地开发部署
 
