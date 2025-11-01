@@ -26,6 +26,8 @@ Watch a quick demonstration of the animation generator in action:
 
 ![Demo Animation](./examples/demo.gif)
 
+**Online Demo**: http://115.190.165.156:8000/
+
 </div>
 
 > 💡 **Viewing Tips**:

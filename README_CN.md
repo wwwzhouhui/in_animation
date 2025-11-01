@@ -24,6 +24,8 @@ Instructional Animation 是一个基于大语言模型的教学动画生成工�
 
 ![演示动画](./examples/demo.gif)
 
+**在线体验地址**：http://115.190.165.156:8000/
+
 </div>
 
 > 💡 **观看提示**：
